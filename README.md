@@ -12,8 +12,9 @@ Interface CLI e GUI para gerenciar, monitorar e configurar servidores MCP com fa
 [![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 [![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
 [![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-informational?style=for-the-badge)]()
+[![Security](https://img.shields.io/badge/Security-Guard%20v1.1.0-red?style=for-the-badge&logo=shield&logoColor=white)]()
 
-[Documentação](SKILL.md) · [Início Rápido](#-quick-start) · [CLI](#-interface-cli) · [GUI](#-interface-gui) · [API](API_REFERENCE.md)
+[Documentação](SKILL.md) · [Início Rápido](#-quick-start) · [CLI](#-interface-cli) · [GUI](#-interface-gui) · [SecurityGuard](#-securityguard--protocolo-de-defesa-preditiva) · [API](API_REFERENCE.md)
 
 </div>
 
@@ -33,7 +34,8 @@ Um **gerenciador de servidores MCP (Model Context Protocol)** que oferece interf
 | 🔌 **Auto-configuração** | Exporta para Cursor, Claude Desktop e Antigravity |
 | 🌐 **Multi-servidor** | Gerencie múltiplos servidores MCP simultaneamente |
 | 💾 **Persistência** | Configurações salvas em JSON |
-| 🔍 **Detecção de Processos** | Encontra servidores MCP já rodando no sistema |
+| �️ **SecurityGuard** | Protocolo de Defesa Preditiva contra comandos destrutivos |
+| �🔍 **Detecção de Processos** | Encontra servidores MCP já rodando no sistema |
 | 🛡️ **35+ Ferramentas MCP** | Integração completa com NotebookLM |
 
 ---
@@ -133,6 +135,10 @@ Interface gráfica moderna com tema escuro inspirado no design system ACI:
 ```
 notebooklm-mcp/
 │
+├── core/                             # Módulos centrais
+│   ├── __init__.py
+│   └── security_guard.py            # SecurityGuard — Defesa Preditiva
+│
 ├── cli/                              # Interface de Linha de Comando
 │   ├── __init__.py
 │   ├── launcher.py                   # Menu principal CLI
@@ -152,10 +158,12 @@ notebooklm-mcp/
 │
 ├── config/                           # Configurações persistentes
 │   ├── servers.json                  # Servidores cadastrados
-│   └── app_config.json              # Preferências do app
+│   ├── app_config.json              # Preferências do app
+│   └── security.json                # Padrões SecurityGuard
 │
 ├── tests/                            # Testes automatizados
-│   └── test_manager.py
+│   ├── test_manager.py
+│   └── test_security.py             # 14 cenários de segurança
 │
 ├── tools/                            # Utilitários auxiliares
 │   └── utils.py                      # Detecção de processos, import/export
@@ -254,20 +262,123 @@ nlm login --check                            # Status da autenticação
 
 ---
 
+## 🛡️ SecurityGuard — Protocolo de Defesa Preditiva
+
+> **v1.1.0** — Camada de defesa proativa que impede a execução de comandos potencialmente destrutivos.
+
+O SecurityGuard valida **cada comando** contra uma lista negra de expressões regulares (Regex) antes da execução, bloqueando operações perigosas automaticamente.
+
+### O que é Bloqueado por Padrão
+
+| Categoria | Exemplos | Severidade |
+|---|---|---|
+| **Destruição de filesystem** | `rm -rf /`, `format C:`, `dd if=... of=/dev/` | CRITICAL |
+| **SQL destrutivo** | `DROP TABLE`, `DELETE FROM ... ;`, `TRUNCATE TABLE` | CRITICAL |
+| **Execução remota (RCE)** | `curl ... \| sh`, `Invoke-Expression DownloadString` | CRITICAL |
+| **Git destrutivo** | `git push --force`, `git reset --hard` | HIGH |
+| **Env vars perigosas** | `LD_PRELOAD`, `DYLD_INSERT_LIBRARIES` | HIGH |
+| **Path traversal** | `../../../etc/passwd`, `.ssh/id_rsa` | HIGH |
+| **Processos críticos** | `kill -9 1`, `taskkill /f /im csrss` | CRITICAL |
+| **Crypto/Ransomware** | `openssl enc -aes ... -in /`, `gpg --encrypt *.*` | CRITICAL |
+
+### Como Personalizar Padrões
+
+Edite `config/security.json`:
+
+```json
+{
+  "dangerousCommandBlocking": {
+    "enabled": true,
+    "customPatterns": [
+      {
+        "pattern": "^my-dangerous-script",
+        "description": "Bloqueia scripts específicos por nome",
+        "severity": "HIGH"
+      },
+      {
+        "pattern": "DROP TABLE",
+        "description": "Proteção contra SQL Injection acidental",
+        "severity": "CRITICAL"
+      },
+      {
+        "pattern": "DELETE FROM",
+        "description": "Blindagem de banco de dados",
+        "severity": "CRITICAL"
+      }
+    ],
+    "allowedPatterns": []
+  }
+}
+```
+
+### Monitoramento via CLI
+
+```
+  > S
+
+  SecurityGuard - Protocolo de Defesa Preditiva
+  ==================================================
+  Status:    ATIVO
+  Padroes:   37 bloqueados
+  Violacoes: 0 detectadas nesta sessao
+
+  Nenhuma violacao detectada. Sistema seguro.
+
+  Config: config/security.json
+  Logs:   logs/security.log
+```
+
+### Uso Programático
+
+```python
+from core.security_guard import SecurityGuard
+
+guard = SecurityGuard()
+
+# Validar comando
+result = guard.validate_command("rm -rf /")
+if not result.is_safe:
+    print(f"BLOQUEADO: {result.violation.description}")
+    # BLOQUEADO: rm -rf (remocao forcada recursiva)
+
+# Validar variáveis de ambiente
+result = guard.validate_env_vars({"LD_PRELOAD": "/tmp/evil.so"})
+
+# Validar caminhos de arquivo
+result = guard.validate_file_path("../../../etc/passwd")
+
+# Adicionar padrão em runtime
+guard.add_pattern(r"^meu-script-perigoso", "Bloqueio customizado", "HIGH")
+
+# Resumo de violações
+summary = guard.get_violations_summary()
+```
+
+---
+
 ## 🧪 Testes
 
 ```bash
+# Testes do gerenciador
 python -m tests.test_manager
+
+# Testes de segurança (14 cenários)
+python -m tests.test_security
+
+# Todos os testes
+python -m tests.test_manager && python -m tests.test_security
 ```
 
 ---
 
 ## 🛡️ Segurança
 
-- Todas as credenciais são armazenadas localmente (cookies do navegador)
-- Nenhum dado é enviado para servidores de terceiros
-- Configurações salvas em JSON local (`config/`)
-- Logs mantidos apenas localmente (`logs/`)
+- **SecurityGuard** — Protocolo de Defesa Preditiva com 35+ padrões regex
+- **Bloqueio dinâmico** — Valida cada comando antes da execução
+- **Configuração soberana** — Controle total via `config/security.json`
+- **Log de auditoria** — Todas as violações em `logs/security.log`
+- Credenciais armazenadas localmente (cookies do navegador)
+- Nenhum dado enviado para servidores de terceiros
 - Comunicação MCP via stdio (sem rede externa)
 
 ---

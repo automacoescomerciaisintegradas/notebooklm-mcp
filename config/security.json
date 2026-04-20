@@ -1,0 +1,24 @@
+{
+  "dangerousCommandBlocking": {
+    "enabled": true,
+    "description": "Protocolo de Defesa Preditiva — SecurityGuard",
+    "customPatterns": [
+      {
+        "pattern": "^my-dangerous-script",
+        "description": "Bloqueia scripts especificos por nome",
+        "severity": "HIGH"
+      },
+      {
+        "pattern": "DROP TABLE",
+        "description": "Protecao contra SQL Injection acidental",
+        "severity": "CRITICAL"
+      },
+      {
+        "pattern": "DELETE FROM",
+        "description": "Blindagem de banco de dados",
+        "severity": "CRITICAL"
+      }
+    ],
+    "allowedPatterns": []
+  }
+}

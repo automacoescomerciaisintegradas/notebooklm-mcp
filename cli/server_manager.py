@@ -19,6 +19,7 @@ from cli.config_util import (
     merge_server_to_client,
     SUPPORTED_CLIENTS,
 )
+from core.security_guard import SecurityGuard
 
 
 class ServerManager:
@@ -29,6 +30,7 @@ class ServerManager:
         self.processes: dict[str, subprocess.Popen] = {}
         self.logs_dir = get_logs_dir()
         self.logs_dir.mkdir(parents=True, exist_ok=True)
+        self.security = SecurityGuard()
 
     def list_servers(self) -> list[dict]:
         """Lista todos os servidores configurados com status."""
@@ -80,6 +82,29 @@ class ServerManager:
         command = srv.get("command", "")
         args = srv.get("args", [])
         env_vars = srv.get("env", {})
+
+        # SecurityGuard — validar comando antes de executar
+        full_cmd = f"{command} {' '.join(args)}"
+        cmd_check = self.security.validate_command(full_cmd)
+        if not cmd_check.is_safe:
+            log_file = self.logs_dir / f"{name}.log"
+            with open(log_file, "a", encoding="utf-8") as lf:
+                lf.write(
+                    f"[SECURITY] Comando bloqueado: {cmd_check.violation.description}\n"
+                    f"  Comando: {full_cmd[:200]}\n"
+                    f"  Severidade: {cmd_check.violation.severity}\n"
+                )
+            return False
+
+        # SecurityGuard — validar variaveis de ambiente
+        env_check = self.security.validate_env_vars(env_vars)
+        if not env_check.is_safe:
+            log_file = self.logs_dir / f"{name}.log"
+            with open(log_file, "a", encoding="utf-8") as lf:
+                lf.write(
+                    f"[SECURITY] Env var bloqueada: {env_check.violation.description}\n"
+                )
+            return False
 
         env = os.environ.copy()
         env.update(env_vars)

@@ -29,7 +29,7 @@ BANNER = r"""
 | |\  | |___| |  | | |___|  __/
 |_| \_|_____|_|  |_|\____|_|
 
-  NotebookLM MCP Server Manager v1.0.0
+  NotebookLM MCP Server Manager v1.1.0
   The AI that actually does things.
 """
 
@@ -43,6 +43,7 @@ MENU = """
   [7] Ver logs de um servidor
   [8] Status de todos os servidores
   [9] Configurar cliente (Cursor/Claude/Antigravity)
+  [S] SecurityGuard - Status de Seguranca
   [0] Sair
 """
 
@@ -149,6 +150,30 @@ def show_status(manager: ServerManager):
     list_servers(manager)
 
 
+def security_status(manager: ServerManager):
+    print("\n  SecurityGuard - Protocolo de Defesa Preditiva")
+    print("  " + "=" * 50)
+    guard = manager.security
+    print(f"  Status:    {'ATIVO' if guard.enabled else 'DESATIVADO'}")
+    print(f"  Padroes:   {guard.pattern_count} bloqueados")
+    print(f"  Violacoes: {guard.violation_count} detectadas nesta sessao")
+
+    summary = guard.get_violations_summary()
+    if summary["total"] > 0:
+        print("\n  Por severidade:")
+        for sev, count in summary["by_severity"].items():
+            print(f"    [{sev}] {count}")
+        print("\n  Ultimas violacoes:")
+        for v in summary["recent"][-5:]:
+            print(f"    [{v['severity']}] {v['description']}")
+            print(f"      Comando: {v['command'][:80]}")
+    else:
+        print("\n  Nenhuma violacao detectada. Sistema seguro.")
+
+    print(f"\n  Config: config/security.json")
+    print(f"  Logs:   logs/security.log")
+
+
 def configure_client(manager: ServerManager):
     print("\n  Configurar Cliente MCP")
     print("  " + "-" * 30)
@@ -196,6 +221,8 @@ def main():
             show_status(manager)
         elif choice == "9":
             configure_client(manager)
+        elif choice.lower() == "s":
+            security_status(manager)
         elif choice == "0":
             print("\n  Ate logo!")
             sys.exit(0)
