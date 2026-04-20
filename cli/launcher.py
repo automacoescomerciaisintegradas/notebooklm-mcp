@@ -29,7 +29,7 @@ BANNER = r"""
 | |\  | |___| |  | | |___|  __/
 |_| \_|_____|_|  |_|\____|_|
 
-  NotebookLM MCP Server Manager v1.1.0
+  NotebookLM MCP Server Manager v1.2.0
   The AI that actually does things.
 """
 

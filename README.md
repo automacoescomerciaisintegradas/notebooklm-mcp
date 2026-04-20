@@ -95,7 +95,7 @@ Menu interativo com todas as operações de gerenciamento:
 | |\  | |___| |  | | |___|  __/
 |_| \_|_____|_|  |_|\____|_|
 
-  NotebookLM MCP Server Manager v1.0.0
+  NotebookLM MCP Server Manager v1.2.0
 
   [1] Listar servidores MCP
   [2] Iniciar servidor

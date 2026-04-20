@@ -12,7 +12,7 @@ from .skill import (
     example_research_and_podcast,
 )
 
-__version__ = "0.1.0"
+__version__ = "1.2.0"
 __author__ = "Antigravity Skills"
 __all__ = [
     "NotebookLMClient",

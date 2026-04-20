@@ -326,7 +326,7 @@ class MCPServerManagerApp:
 
         tk.Label(
             footer,
-            text="v1.0.0",
+            text="v1.2.0",
             font=("Segoe UI", 8),
             fg=COLORS["text_secondary"],
             bg=COLORS["bg_secondary"],

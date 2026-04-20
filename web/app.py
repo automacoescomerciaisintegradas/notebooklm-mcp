@@ -214,7 +214,7 @@ def api_health():
     running = sum(1 for s in servers if s.get("running"))
     return jsonify({
         "status": "ok",
-        "version": "1.1.0",
+        "version": "1.2.0",
         "timestamp": datetime.now().isoformat(),
         "servers_total": len(servers),
         "servers_running": running,
