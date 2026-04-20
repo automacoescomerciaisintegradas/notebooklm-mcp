@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NotebookLM MCP Server Manager</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-left">
+            <h1 class="logo">
+                <span class="logo-icon">&#x1F9E0;</span>
+                NotebookLM MCP Server Manager
+            </h1>
+            <span class="tagline">The AI that actually does things.</span>
+        </div>
+        <div class="header-right">
+            <div class="health-badge" id="healthBadge">
+                <span class="dot dot-loading"></span>
+                <span id="healthText">Conectando...</span>
+            </div>
+            <div class="security-badge" id="securityBadge">
+                <span class="shield-icon">&#x1F6E1;</span>
+                <span id="securityText">SecurityGuard</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <nav class="nav">
+                <button class="nav-btn active" data-tab="servers" onclick="switchTab('servers')">
+                    <span class="nav-icon">&#x2699;</span> Servidores
+                </button>
+                <button class="nav-btn" data-tab="security" onclick="switchTab('security')">
+                    <span class="nav-icon">&#x1F6E1;</span> SecurityGuard
+                </button>
+                <button class="nav-btn" data-tab="clients" onclick="switchTab('clients')">
+                    <span class="nav-icon">&#x1F50C;</span> Clientes
+                </button>
+                <button class="nav-btn" data-tab="logs" onclick="switchTab('logs')">
+                    <span class="nav-icon">&#x1F4CB;</span> Logs
+                </button>
+                <button class="nav-btn" data-tab="validate" onclick="switchTab('validate')">
+                    <span class="nav-icon">&#x1F50D;</span> Validar Comando
+                </button>
+            </nav>
+
+            <!-- Stats -->
+            <div class="stats-card">
+                <div class="stat">
+                    <span class="stat-value" id="totalServers">0</span>
+                    <span class="stat-label">Servidores</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-value" id="runningServers">0</span>
+                    <span class="stat-label">Rodando</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-value" id="securityPatterns">0</span>
+                    <span class="stat-label">Padroes</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Content Area -->
+        <section class="content">
+
+            <!-- Tab: Servers -->
+            <div class="tab-content active" id="tab-servers">
+                <div class="content-header">
+                    <h2>Servidores MCP</h2>
+                    <div class="content-actions">
+                        <button class="btn btn-primary" onclick="showAddServerModal()">+ Adicionar</button>
+                        <button class="btn btn-ghost" onclick="refreshServers()">Atualizar</button>
+                    </div>
+                </div>
+
+                <div class="server-grid" id="serverGrid">
+                    <div class="empty-state">
+                        <p>Carregando servidores...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab: Security -->
+            <div class="tab-content" id="tab-security">
+                <div class="content-header">
+                    <h2>SecurityGuard &mdash; Protocolo de Defesa Preditiva</h2>
+                </div>
+                <div class="security-dashboard" id="securityDashboard">
+                    <div class="metric-cards">
+                        <div class="metric-card">
+                            <span class="metric-value" id="secEnabled">--</span>
+                            <span class="metric-label">Status</span>
+                        </div>
+                        <div class="metric-card">
+                            <span class="metric-value" id="secPatterns">--</span>
+                            <span class="metric-label">Padroes Bloqueados</span>
+                        </div>
+                        <div class="metric-card metric-danger">
+                            <span class="metric-value" id="secViolations">--</span>
+                            <span class="metric-label">Violacoes</span>
+                        </div>
+                    </div>
+                    <div class="violations-list" id="violationsList">
+                        <h3>Violacoes Recentes</h3>
+                        <p class="text-muted">Nenhuma violacao detectada.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab: Clients -->
+            <div class="tab-content" id="tab-clients">
+                <div class="content-header">
+                    <h2>Clientes MCP</h2>
+                </div>
+                <div class="client-grid" id="clientGrid">
+                    <p>Carregando clientes...</p>
+                </div>
+            </div>
+
+            <!-- Tab: Logs -->
+            <div class="tab-content" id="tab-logs">
+                <div class="content-header">
+                    <h2>Logs do Servidor</h2>
+                    <div class="content-actions">
+                        <select id="logServerSelect" class="select" onchange="loadLogs()">
+                            <option value="">Selecione um servidor</option>
+                        </select>
+                        <button class="btn btn-ghost" onclick="loadLogs()">Atualizar</button>
+                    </div>
+                </div>
+                <pre class="log-viewer" id="logViewer">Selecione um servidor para ver os logs.</pre>
+            </div>
+
+            <!-- Tab: Validate -->
+            <div class="tab-content" id="tab-validate">
+                <div class="content-header">
+                    <h2>Validar Comando</h2>
+                </div>
+                <div class="validate-form">
+                    <p class="text-muted">Teste um comando contra o SecurityGuard antes de executar.</p>
+                    <div class="input-group">
+                        <input type="text" id="validateInput" class="input" placeholder="Digite um comando (ex: rm -rf /)" onkeydown="if(event.key==='Enter')validateCommand()">
+                        <button class="btn btn-primary" onclick="validateCommand()">Validar</button>
+                    </div>
+                    <div class="validate-result" id="validateResult"></div>
+                </div>
+            </div>
+
+        </section>
+    </main>
+
+    <!-- Modal: Add Server -->
+    <div class="modal-overlay" id="addServerModal" onclick="closeModal(event)">
+        <div class="modal" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h3>Novo Servidor MCP</h3>
+                <button class="btn-close" onclick="hideAddServerModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Nome</label>
+                    <input type="text" id="addName" class="input" placeholder="meu-servidor-mcp">
+                </div>
+                <div class="form-group">
+                    <label>Comando</label>
+                    <input type="text" id="addCommand" class="input" placeholder="nlm" value="nlm">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Transporte</label>
+                        <select id="addTransport" class="select">
+                            <option value="stdio">stdio</option>
+                            <option value="http">http</option>
+                            <option value="sse">sse</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Porta (opcional)</label>
+                        <input type="number" id="addPort" class="input" placeholder="3000">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Argumentos (separados por espaco)</label>
+                    <input type="text" id="addArgs" class="input" placeholder="serve --verbose">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-ghost" onclick="hideAddServerModal()">Cancelar</button>
+                <button class="btn btn-primary" onclick="addServer()">Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <span>&copy; Automacoes Comerciais Integradas 2026 &#x2699;</span>
+        <span>v1.1.0 &mdash; SecurityGuard</span>
+    </footer>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>

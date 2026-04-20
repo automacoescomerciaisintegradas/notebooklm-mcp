@@ -28,7 +28,7 @@ Um **gerenciador de servidores MCP (Model Context Protocol)** que oferece interf
 
 | Funcionalidade | Descrição |
 |---|---|
-| 🖥️ **Dual Interface** | CLI interativa (Rich) + GUI completa (Tkinter) |
+| 🖥️ **Triple Interface** | CLI interativa + GUI desktop (Tkinter) + Web dashboard (Flask) |
 | 🔄 **Gerenciamento Completo** | Iniciar, parar, reiniciar e monitorar servidores |
 | 📊 **Logs em Tempo Real** | Visualize logs de cada servidor instantaneamente |
 | 🔌 **Auto-configuração** | Exporta para Cursor, Claude Desktop e Antigravity |
@@ -72,9 +72,14 @@ nlm login
 python -m cli.launcher
 # ou: cli-launcher.bat
 
-# GUI
+# GUI desktop (Tkinter)
 python -m gui.app
 # ou: gui-launcher.bat
+
+# Web dashboard (navegador)
+python -m web.app
+# ou: web-launcher.bat
+# Acesse: http://localhost:5117
 ```
 
 ---
@@ -116,6 +121,41 @@ Interface gráfica moderna com tema escuro inspirado no design system ACI:
 - **Auto-refresh** — Atualização automática a cada 3 segundos
 
 > Para capturas de tela, veja a pasta `gui/assets/screenshots/`
+
+---
+
+## 🌐 Interface Web
+
+Dashboard completo acessivel pelo navegador em `http://localhost:5117`:
+
+- **Dashboard** — Cards de servidores com status, PID e acoes em tempo real
+- **SecurityGuard** — Metricas, violacoes recentes e validacao de comandos
+- **Clientes** — Configurar Cursor, Claude Desktop e Antigravity com 1 clique
+- **Logs** — Visualizador de logs por servidor
+- **Validar Comando** — Teste qualquer comando contra o SecurityGuard
+- **Auto-refresh** — Atualizacao automatica a cada 4 segundos
+- **API REST** — 16 endpoints para integracao programatica
+
+### API REST Endpoints
+
+| Metodo | Endpoint | Descricao |
+|---|---|---|
+| GET | `/api/servers` | Listar servidores |
+| POST | `/api/servers` | Adicionar servidor |
+| DELETE | `/api/servers/<name>` | Remover servidor |
+| POST | `/api/servers/<name>/start` | Iniciar servidor |
+| POST | `/api/servers/<name>/stop` | Parar servidor |
+| POST | `/api/servers/<name>/restart` | Reiniciar servidor |
+| GET | `/api/servers/<name>/info` | Detalhes do servidor |
+| GET | `/api/servers/<name>/logs` | Logs do servidor |
+| POST | `/api/servers/<name>/logs/clear` | Limpar logs |
+| GET | `/api/clients` | Listar clientes |
+| POST | `/api/clients/<client>/configure` | Configurar cliente |
+| GET | `/api/security/status` | Status do SecurityGuard |
+| POST | `/api/security/validate` | Validar comando |
+| GET | `/api/config` | Ler configuracao |
+| PUT | `/api/config` | Atualizar configuracao |
+| GET | `/api/health` | Health check |
 
 ---
 

@@ -9,6 +9,13 @@
       "transport": "stdio",
       "env": {},
       "description": "NotebookLM MCP Server - Acesso programatico ao Google NotebookLM"
+    },
+    "youtube": {
+      "name": "youtube",
+      "command": "nlm youtube",
+      "transport": "stdio",
+      "args": [],
+      "env": {}
     }
   }
 }
