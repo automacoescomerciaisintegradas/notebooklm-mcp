@@ -311,17 +311,19 @@ class AIExtractor:
         """Extrai via Ollama local (API compativel com OpenAI)."""
         try:
             from openai import OpenAI
+            import httpx
 
             base_url = self.config.get("ollama_base_url", "http://localhost:11434")
             client = OpenAI(
                 api_key="ollama",
                 base_url=f"{base_url}/v1",
+                timeout=httpx.Timeout(600.0, connect=10.0),
             )
-            model = self.config.get("ollama_model", "gemma4:e2b")
+            model = self.config.get("ollama_model", "gemma3:4b")
             response = client.chat.completions.create(
                 model=model,
                 messages=[
-                    {"role": "system", "content": "Voce extrai skills praticas de videos. Sempre responda em JSON valido."},
+                    {"role": "system", "content": "Voce extrai skills praticas de videos. Sempre responda em JSON valido, sem markdown code blocks."},
                     {"role": "user", "content": prompt},
                 ],
                 temperature=0.3,

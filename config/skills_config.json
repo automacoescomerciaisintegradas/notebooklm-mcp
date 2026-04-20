@@ -3,6 +3,6 @@
   "ai_provider": "ollama",
   "openrouter_api_key": "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",
   "openrouter_model": "google/gemma-3-27b-it:free",
-  "ollama_model": "gemma4:e2b",
+  "ollama_model": "gemma3:4b",
   "ollama_base_url": "http://localhost:11434"
 }
