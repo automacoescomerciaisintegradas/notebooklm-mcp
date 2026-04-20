@@ -91,8 +91,8 @@ class AIExtractor:
         if not transcript or len(transcript.strip()) < 100:
             return {"error": "Transcript muito curto para extrar skills"}
 
-        # Truncar transcript muito longo (limite ~12k tokens)
-        max_chars = 40000
+        # Truncar transcript (15k chars ~= 4k tokens, rapido em qualquer provider)
+        max_chars = 15000
         if len(transcript) > max_chars:
             transcript = transcript[:max_chars] + "\n\n[...transcript truncado...]"
 
@@ -122,7 +122,7 @@ class AIExtractor:
         # Fallback: se o provider principal falhou, tentar os outros
         if "error" in result:
             errors = {provider: result["error"]}
-            fallback_order = [p for p in ["ollama", "gemini", "openai", "anthropic", "openrouter"] if p != provider]
+            fallback_order = [p for p in ["gemini", "openai", "anthropic", "openrouter", "ollama"] if p != provider]
             for fallback in fallback_order:
                 if self._has_api_key(fallback):
                     fb_result = extractors[fallback](prompt)
@@ -237,11 +237,18 @@ class AIExtractor:
 
             genai.configure(api_key=api_key)
             model = genai.GenerativeModel(
-                self.config.get("gemini_model", "gemini-2.0-flash"),
-                generation_config={"temperature": 0.3, "response_mime_type": "application/json"},
+                self.config.get("gemini_model", "gemini-2.0-flash-lite"),
+                generation_config={
+                    "temperature": 0.3,
+                    "response_mime_type": "application/json",
+                    "max_output_tokens": 4096,
+                },
             )
 
-            response = model.generate_content(prompt)
+            response = model.generate_content(
+                prompt,
+                request_options={"timeout": 120},
+            )
             return self._parse_json_response(response.text)
 
         except ImportError:

@@ -1,8 +1,9 @@
 {
-  "gemini_api_key": "AIzaSyA1G50ZiNpXLNsZ7004DvHu58I4co0naIg",
+  "gemini_api_key": "GEMINI_API_KEY_REMOVED",
   "ai_provider": "ollama",
   "openrouter_api_key": "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",
   "openrouter_model": "google/gemma-3-27b-it:free",
   "ollama_model": "gemma3:4b",
-  "ollama_base_url": "http://localhost:11434"
+  "ollama_base_url": "http://localhost:11434",
+  "gemini_model": "gemini-2.0-flash-lite"
 }
