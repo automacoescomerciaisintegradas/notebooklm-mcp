@@ -1,0 +1,182 @@
+# workflow_example.yaml
+# 
+# Exemplo: Pesquisa Trimestral → Notebook → Apresentação → Compartilhamento
+#
+# Integração com Antigravity/Lobster
+#
+# Uso:
+#   nlm pipeline run quarterly_research
+#
+
+name: quarterly_research
+version: "1.0"
+
+description: >
+  Workflow trimestral de pesquisa:
+  1. Pesquisar com IA sobre tendências
+  2. Criar notebook com resultados
+  3. Adicionar fontes em lote
+  4. Gerar apresentação
+  5. Compartilhar com stakeholders
+
+parameters:
+  quarter: "Q2"
+  year: 2026
+  research_topic: "Enterprise AI & Automation Trends"
+  stakeholders:
+    - "team@company.com"
+    - "cto@company.com"
+
+steps:
+  # ==================== PESQUISA ====================
+  - id: research
+    name: "Research Web"
+    skill: notebooklm-mcp
+    action: research_start
+    params:
+      query: "{{ parameters.research_topic }} 2026 comprehensive analysis"
+      depth: "comprehensive"
+    retries: 3
+    timeout: 120
+    output:
+      sources: research.sources
+      insights: research.insights
+
+  # ==================== CRIAR NOTEBOOK ====================
+  - id: create_notebook
+    name: "Create Notebook"
+    skill: notebooklm-mcp
+    action: notebook_create
+    params:
+      name: "{{ parameters.research_topic }} - {{ parameters.quarter }} {{ parameters.year }}"
+      description: |
+        Compiled research on {{ parameters.research_topic }}
+        Quarter: {{ parameters.quarter }} {{ parameters.year }}
+        Sources: {{ research.sources | length }}
+    output:
+      notebook_id: create_notebook.id
+
+  # ==================== ADICIONAR FONTES ====================
+  - id: add_sources
+    name: "Add Sources (Batch)"
+    skill: notebooklm-mcp
+    action: batch
+    foreach: "{{ research.sources[0:10] }}"  # Limitar a 10 fontes
+    params:
+      notebook_id: "{{ create_notebook.notebook_id }}"
+      source_type: "url"
+      url: "{{ item.url }}"
+      title: "{{ item.title }}"
+    retries: 2
+    continue_on_error: true
+    output:
+      added_sources: add_sources.count
+
+  # ==================== GERAR APRESENTAÇÃO ====================
+  - id: generate_slides
+    name: "Generate Slides"
+    skill: notebooklm-mcp
+    action: studio_create
+    params:
+      notebook_id: "{{ create_notebook.notebook_id }}"
+      type: "slides"
+      style: "professional"
+      format: "landscape"
+      confirm: true
+    timeout: 300  # 5 minutos
+    retries: 2
+    output:
+      artifact_id: generate_slides.id
+
+  # ==================== DOWNLOAD ====================
+  - id: download_slides
+    name: "Download Slides"
+    skill: notebooklm-mcp
+    action: download_artifact
+    params:
+      notebook_id: "{{ create_notebook.notebook_id }}"
+      artifact_id: "{{ generate_slides.artifact_id }}"
+      output_path: "./outputs/slides/"
+      format: "pdf"
+    retries: 1
+    output:
+      file_path: download_slides.path
+
+  # ==================== COMPARTILHAR ====================
+  - id: share_public
+    name: "Share Public Link"
+    skill: notebooklm-mcp
+    action: notebook_share_public
+    params:
+      notebook_id: "{{ create_notebook.notebook_id }}"
+    output:
+      public_url: share_public.url
+
+  # ==================== CONVIDAR STAKEHOLDERS ====================
+  - id: invite_stakeholders
+    name: "Invite Stakeholders"
+    skill: notebooklm-mcp
+    action: batch
+    foreach: "{{ parameters.stakeholders }}"
+    params:
+      notebook_id: "{{ create_notebook.notebook_id }}"
+      email: "{{ item }}"
+      role: "viewer"
+    continue_on_error: true
+    output:
+      invitations_sent: invite_stakeholders.count
+
+  # ==================== NOTIFICAÇÃO ====================
+  - id: notify
+    name: "Send Notification"
+    skill: utilities/shell
+    action: notify
+    params:
+      title: "✅ Research {{ parameters.quarter }} Complete"
+      message: |
+        Research topic: {{ parameters.research_topic }}
+        Notebook: {{ create_notebook.notebook_id }}
+        Sources: {{ add_sources.added_sources }}
+        Slides: {{ download_slides.file_path }}
+        Public link: {{ share_public.public_url }}
+      recipients: "{{ parameters.stakeholders }}"
+
+# ==================== OUTPUTS ====================
+outputs:
+  notebook_id: "{{ create_notebook.notebook_id }}"
+  slides_path: "{{ download_slides.file_path }}"
+  public_url: "{{ share_public.public_url }}"
+  total_sources: "{{ research.sources | length }}"
+  sources_added: "{{ add_sources.added_sources }}"
+  timestamp: "{{ now() }}"
+
+# ==================== TRIGGERS ====================
+triggers:
+  - type: schedule
+    cron: "0 0 1 */3 *"  # Primeiro dia de cada trimestre
+    
+  - type: manual
+    description: "Disparar manualmente pesquisa trimestral"
+
+# ==================== ERROR HANDLING ====================
+on_error:
+  - action: "notify"
+    params:
+      title: "❌ Research Workflow Failed"
+      recipients: ["team@company.com"]
+  
+  - action: "slack"
+    params:
+      channel: "#errors"
+      message: "Quarterly research pipeline failed at step {{ failed_step }}"
+
+# ==================== NOTIFICATIONS ====================
+notifications:
+  success:
+    - channel: slack
+      message: "✅ Quarterly research complete! View at {{ share_public.public_url }}"
+  
+  error:
+    - channel: email
+      subject: "❌ Quarterly Research Failed"
+      recipients: ["admin@company.com"]
