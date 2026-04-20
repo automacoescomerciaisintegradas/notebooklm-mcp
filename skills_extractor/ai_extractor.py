@@ -1,7 +1,7 @@
 """
 Skills Extractor — AI Extractor
 Processa transcripts de video via IA para extrair skills estruturadas.
-Suporta: OpenAI, Google Gemini, Anthropic Claude.
+Suporta: OpenAI, Google Gemini, Anthropic Claude, OpenRouter.
 
 (c) Automacoes Comerciais Integradas 2026
 """
@@ -109,6 +109,7 @@ class AIExtractor:
             "openai": self._extract_openai,
             "gemini": self._extract_gemini,
             "anthropic": self._extract_anthropic,
+            "openrouter": self._extract_openrouter,
         }
 
         extractor = extractors.get(provider)
@@ -116,6 +117,18 @@ class AIExtractor:
             return {"error": f"Provider desconhecido: {provider}"}
 
         result = extractor(prompt)
+
+        # Fallback: se o provider principal falhou, tentar os outros
+        if "error" in result:
+            fallback_order = [p for p in ["gemini", "openai", "anthropic", "openrouter"] if p != provider]
+            for fallback in fallback_order:
+                if self._has_api_key(fallback):
+                    fb_result = extractors[fallback](prompt)
+                    if "error" not in fb_result:
+                        fb_result["fallback_from"] = provider
+                        result = fb_result
+                        provider = fallback
+                        break
 
         if "error" not in result:
             result["provider"] = provider
@@ -139,8 +152,22 @@ class AIExtractor:
             return "openai"
         if os.environ.get("ANTHROPIC_API_KEY"):
             return "anthropic"
+        if os.environ.get("OPENROUTER_API_KEY"):
+            return "openrouter"
 
         return None
+
+    def _has_api_key(self, provider: str) -> bool:
+        """Verifica se existe API key para o provider."""
+        if provider == "gemini":
+            return bool(self.config.get("gemini_api_key") or os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY"))
+        if provider == "openai":
+            return bool(self.config.get("openai_api_key") or os.environ.get("OPENAI_API_KEY"))
+        if provider == "anthropic":
+            return bool(self.config.get("anthropic_api_key") or os.environ.get("ANTHROPIC_API_KEY"))
+        if provider == "openrouter":
+            return bool(self.config.get("openrouter_api_key") or os.environ.get("OPENROUTER_API_KEY"))
+        return False
 
     def _extract_openai(self, prompt: str) -> dict:
         """Extrai via OpenAI API."""
@@ -223,6 +250,37 @@ class AIExtractor:
         except Exception as e:
             return {"error": f"Anthropic: {str(e)}"}
 
+    def _extract_openrouter(self, prompt: str) -> dict:
+        """Extrai via OpenRouter (API compativel com OpenAI)."""
+        try:
+            from openai import OpenAI
+
+            api_key = self.config.get("openrouter_api_key") or os.environ.get("OPENROUTER_API_KEY")
+            if not api_key:
+                return {"error": "OPENROUTER_API_KEY nao configurada"}
+
+            client = OpenAI(
+                api_key=api_key,
+                base_url="https://openrouter.ai/api/v1",
+            )
+            model = self.config.get("openrouter_model", "google/gemini-2.0-flash-exp:free")
+            response = client.chat.completions.create(
+                model=model,
+                messages=[
+                    {"role": "system", "content": "Voce extrai skills praticas de videos. Sempre responda em JSON valido."},
+                    {"role": "user", "content": prompt},
+                ],
+                temperature=0.3,
+            )
+
+            content = response.choices[0].message.content
+            return self._parse_json_response(content)
+
+        except ImportError:
+            return {"error": "openai nao instalado: pip install openai"}
+        except Exception as e:
+            return {"error": f"OpenRouter: {str(e)}"}
+
     def _parse_json_response(self, text: str) -> dict:
         """Parse JSON da resposta da IA, extraindo de markdown code blocks se necessario."""
         text = text.strip()
@@ -237,16 +295,25 @@ class AIExtractor:
         except json.JSONDecodeError as e:
             return {"error": f"JSON invalido da IA: {str(e)}", "raw_response": text[:500]}
 
-    def set_api_key(self, provider: str, api_key: str):
-        """Salva API key na config."""
+    def set_api_key(self, provider: str, api_key: str, model: str = None):
+        """Salva API key e modelo na config."""
         key_map = {
             "openai": "openai_api_key",
             "gemini": "gemini_api_key",
             "anthropic": "anthropic_api_key",
+            "openrouter": "openrouter_api_key",
+        }
+        model_map = {
+            "openai": "openai_model",
+            "gemini": "gemini_model",
+            "anthropic": "anthropic_model",
+            "openrouter": "openrouter_model",
         }
         if provider in key_map:
             self.config[key_map[provider]] = api_key
             self.config["ai_provider"] = provider
+            if model and provider in model_map:
+                self.config[model_map[provider]] = model
             self._save_config(self.config)
 
     def get_status(self) -> dict:
@@ -256,4 +323,5 @@ class AIExtractor:
             "openai": bool(self.config.get("openai_api_key") or os.environ.get("OPENAI_API_KEY")),
             "gemini": bool(self.config.get("gemini_api_key") or os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")),
             "anthropic": bool(self.config.get("anthropic_api_key") or os.environ.get("ANTHROPIC_API_KEY")),
+            "openrouter": bool(self.config.get("openrouter_api_key") or os.environ.get("OPENROUTER_API_KEY")),
         }

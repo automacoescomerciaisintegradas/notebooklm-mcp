@@ -273,6 +273,7 @@
                             <option value="gemini">Google Gemini</option>
                             <option value="openai">OpenAI GPT</option>
                             <option value="anthropic">Anthropic Claude</option>
+                            <option value="openrouter">OpenRouter</option>
                         </select>
                         <button class="btn btn-primary" onclick="extractSkills()" id="extractBtn">
                             &#x2728; Extrair Skills
@@ -325,7 +326,13 @@
                             <option value="gemini">Google Gemini</option>
                             <option value="openai">OpenAI</option>
                             <option value="anthropic">Anthropic Claude</option>
+                            <option value="openrouter">OpenRouter</option>
                         </select>
+                    </div>
+                    <div class="form-group" id="modelGroup" style="display:none;">
+                        <label>Modelo (opcional)</label>
+                        <input id="configModel" class="input" type="text" placeholder="ex: google/gemini-2.0-flash-exp:free" />
+                    </div>
                     </div>
                     <div class="form-group">
                         <label>API Key</label>
@@ -539,6 +546,7 @@
                     Gemini: ${data.gemini ? '<span style="color:var(--success)">Configurado</span>' : '<span style="color:var(--text-muted)">Nao configurado</span>'}<br>
                     OpenAI: ${data.openai ? '<span style="color:var(--success)">Configurado</span>' : '<span style="color:var(--text-muted)">Nao configurado</span>'}<br>
                     Anthropic: ${data.anthropic ? '<span style="color:var(--success)">Configurado</span>' : '<span style="color:var(--text-muted)">Nao configurado</span>'}<br>
+                    OpenRouter: ${data.openrouter ? '<span style="color:var(--success)">Configurado</span>' : '<span style="color:var(--text-muted)">Nao configurado</span>'}<br>
                     Provider ativo: <strong>${data.configured_provider || 'nenhum'}</strong>
                 </div>
             `;
@@ -549,10 +557,14 @@
             const api_key = document.getElementById('configApiKey').value.trim();
             if (!api_key) { toast('error', 'Informe a API key'); return; }
 
+            const payload = { provider, api_key };
+            const model = document.getElementById('configModel').value.trim();
+            if (model) payload.model = model;
+
             const res = await fetch(`${API}/api/skills/ai/configure`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ provider, api_key }),
+                body: JSON.stringify(payload),
             });
             const data = await res.json();
             toast(data.success ? 'success' : 'error', data.message || data.error);
@@ -567,7 +579,7 @@
                 const res = await fetch(`${API}/api/skills/ai/status`);
                 const data = await res.json();
                 const badge = document.getElementById('aiStatus');
-                const any = data.gemini || data.openai || data.anthropic;
+                const any = data.gemini || data.openai || data.anthropic || data.openrouter;
                 badge.innerHTML = `
                     <span class="dot ${any ? 'dot-ok' : 'dot-err'}"></span>
                     <span>IA: ${data.configured_provider || (any ? 'disponivel' : 'nao configurada')}</span>
@@ -576,6 +588,11 @@
         }
 
         // === Utils ===
+        // Toggle model field for OpenRouter
+        document.getElementById('configProvider').addEventListener('change', function() {
+            document.getElementById('modelGroup').style.display = this.value === 'openrouter' ? '' : 'none';
+        });
+
         function esc(str) {
             if (!str) return '';
             const div = document.createElement('div');

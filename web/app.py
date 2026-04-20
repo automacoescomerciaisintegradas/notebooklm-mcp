@@ -345,9 +345,10 @@ def api_configure_ai():
     data = request.get_json()
     provider = data.get("provider")
     api_key = data.get("api_key")
+    model = data.get("model")
     if not provider or not api_key:
         return jsonify({"error": "provider e api_key sao obrigatorios"}), 400
-    ai_extractor.set_api_key(provider, api_key)
+    ai_extractor.set_api_key(provider, api_key, model=model)
     return jsonify({"success": True, "message": f"API key {provider} configurada"})
 
 
