@@ -1,7 +1,7 @@
 """
 Skills Extractor — AI Extractor
 Processa transcripts de video via IA para extrair skills estruturadas.
-Suporta: OpenAI, Google Gemini, Anthropic Claude, OpenRouter.
+Suporta: OpenAI, Google Gemini, Anthropic Claude, OpenRouter, Ollama (local).
 
 (c) Automacoes Comerciais Integradas 2026
 """
@@ -110,6 +110,7 @@ class AIExtractor:
             "gemini": self._extract_gemini,
             "anthropic": self._extract_anthropic,
             "openrouter": self._extract_openrouter,
+            "ollama": self._extract_ollama,
         }
 
         extractor = extractors.get(provider)
@@ -120,7 +121,8 @@ class AIExtractor:
 
         # Fallback: se o provider principal falhou, tentar os outros
         if "error" in result:
-            fallback_order = [p for p in ["gemini", "openai", "anthropic", "openrouter"] if p != provider]
+            errors = {provider: result["error"]}
+            fallback_order = [p for p in ["ollama", "gemini", "openai", "anthropic", "openrouter"] if p != provider]
             for fallback in fallback_order:
                 if self._has_api_key(fallback):
                     fb_result = extractors[fallback](prompt)
@@ -129,6 +131,12 @@ class AIExtractor:
                         result = fb_result
                         provider = fallback
                         break
+                    else:
+                        errors[fallback] = fb_result["error"]
+            # Se todos falharam, mostrar resumo
+            if "error" in result and len(errors) > 1:
+                summary = "; ".join(f"[{p}] {e[:80]}" for p, e in errors.items())
+                result["error"] = f"Todos os providers falharam: {summary}"
 
         if "error" not in result:
             result["provider"] = provider
@@ -155,6 +163,10 @@ class AIExtractor:
         if os.environ.get("OPENROUTER_API_KEY"):
             return "openrouter"
 
+        # Ollama local — sem key, verificar se esta rodando
+        if self._is_ollama_available():
+            return "ollama"
+
         return None
 
     def _has_api_key(self, provider: str) -> bool:
@@ -167,7 +179,20 @@ class AIExtractor:
             return bool(self.config.get("anthropic_api_key") or os.environ.get("ANTHROPIC_API_KEY"))
         if provider == "openrouter":
             return bool(self.config.get("openrouter_api_key") or os.environ.get("OPENROUTER_API_KEY"))
+        if provider == "ollama":
+            return self._is_ollama_available()
         return False
+
+    def _is_ollama_available(self) -> bool:
+        """Verifica se Ollama esta rodando localmente."""
+        try:
+            import urllib.request
+            base = self.config.get("ollama_base_url", "http://localhost:11434")
+            req = urllib.request.Request(f"{base}/api/tags", method="GET")
+            with urllib.request.urlopen(req, timeout=2) as resp:
+                return resp.status == 200
+        except Exception:
+            return False
 
     def _extract_openai(self, prompt: str) -> dict:
         """Extrai via OpenAI API."""
@@ -263,7 +288,7 @@ class AIExtractor:
                 api_key=api_key,
                 base_url="https://openrouter.ai/api/v1",
             )
-            model = self.config.get("openrouter_model", "google/gemini-2.0-flash-exp:free")
+            model = self.config.get("openrouter_model", "google/gemma-3-27b-it:free")
             response = client.chat.completions.create(
                 model=model,
                 messages=[
@@ -281,6 +306,34 @@ class AIExtractor:
             return {"error": "openai nao instalado: pip install openai"}
         except Exception as e:
             return {"error": f"OpenRouter: {str(e)}"}
+
+    def _extract_ollama(self, prompt: str) -> dict:
+        """Extrai via Ollama local (API compativel com OpenAI)."""
+        try:
+            from openai import OpenAI
+
+            base_url = self.config.get("ollama_base_url", "http://localhost:11434")
+            client = OpenAI(
+                api_key="ollama",
+                base_url=f"{base_url}/v1",
+            )
+            model = self.config.get("ollama_model", "gemma4:e2b")
+            response = client.chat.completions.create(
+                model=model,
+                messages=[
+                    {"role": "system", "content": "Voce extrai skills praticas de videos. Sempre responda em JSON valido."},
+                    {"role": "user", "content": prompt},
+                ],
+                temperature=0.3,
+            )
+
+            content = response.choices[0].message.content
+            return self._parse_json_response(content)
+
+        except ImportError:
+            return {"error": "openai nao instalado: pip install openai"}
+        except Exception as e:
+            return {"error": f"Ollama: {str(e)}"}
 
     def _parse_json_response(self, text: str) -> dict:
         """Parse JSON da resposta da IA, extraindo de markdown code blocks se necessario."""
@@ -303,18 +356,23 @@ class AIExtractor:
             "gemini": "gemini_api_key",
             "anthropic": "anthropic_api_key",
             "openrouter": "openrouter_api_key",
+            "ollama": None,
         }
         model_map = {
             "openai": "openai_model",
             "gemini": "gemini_model",
             "anthropic": "anthropic_model",
             "openrouter": "openrouter_model",
+            "ollama": "ollama_model",
         }
         if provider in key_map:
-            self.config[key_map[provider]] = api_key
+            if key_map[provider]:
+                self.config[key_map[provider]] = api_key
             self.config["ai_provider"] = provider
             if model and provider in model_map:
                 self.config[model_map[provider]] = model
+            if provider == "ollama" and api_key:
+                self.config["ollama_base_url"] = api_key
             self._save_config(self.config)
 
     def get_status(self) -> dict:
@@ -325,4 +383,6 @@ class AIExtractor:
             "gemini": bool(self.config.get("gemini_api_key") or os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")),
             "anthropic": bool(self.config.get("anthropic_api_key") or os.environ.get("ANTHROPIC_API_KEY")),
             "openrouter": bool(self.config.get("openrouter_api_key") or os.environ.get("OPENROUTER_API_KEY")),
+            "ollama": self._is_ollama_available(),
+            "ollama_model": self.config.get("ollama_model", "gemma4:e2b"),
         }

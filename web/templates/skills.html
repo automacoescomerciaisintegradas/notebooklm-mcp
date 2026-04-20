@@ -270,6 +270,7 @@
                     <div class="extract-actions">
                         <select id="providerSelect" class="provider-select">
                             <option value="">Auto-detect IA</option>
+                            <option value="ollama">Ollama (local)</option>
                             <option value="gemini">Google Gemini</option>
                             <option value="openai">OpenAI GPT</option>
                             <option value="anthropic">Anthropic Claude</option>
@@ -323,19 +324,19 @@
                     <div class="form-group">
                         <label>Provider</label>
                         <select id="configProvider" class="select">
+                            <option value="ollama">Ollama (local)</option>
                             <option value="gemini">Google Gemini</option>
                             <option value="openai">OpenAI</option>
                             <option value="anthropic">Anthropic Claude</option>
                             <option value="openrouter">OpenRouter</option>
                         </select>
                     </div>
-                    <div class="form-group" id="modelGroup" style="display:none;">
-                        <label>Modelo (opcional)</label>
-                        <input id="configModel" class="input" type="text" placeholder="ex: google/gemini-2.0-flash-exp:free" />
+                    <div class="form-group" id="modelGroup">
+                        <label>Modelo</label>
+                        <input id="configModel" class="input" type="text" placeholder="ex: gemma4:e2b, qwen3-coder" />
                     </div>
-                    </div>
-                    <div class="form-group">
-                        <label>API Key</label>
+                    <div class="form-group" id="apiKeyGroup">
+                        <label id="apiKeyLabel">API Key</label>
                         <input id="configApiKey" class="input" type="password" placeholder="Sua API key..." />
                     </div>
                     <button class="btn btn-primary" onclick="saveAiConfig()">Salvar</button>
@@ -547,6 +548,7 @@
                     OpenAI: ${data.openai ? '<span style="color:var(--success)">Configurado</span>' : '<span style="color:var(--text-muted)">Nao configurado</span>'}<br>
                     Anthropic: ${data.anthropic ? '<span style="color:var(--success)">Configurado</span>' : '<span style="color:var(--text-muted)">Nao configurado</span>'}<br>
                     OpenRouter: ${data.openrouter ? '<span style="color:var(--success)">Configurado</span>' : '<span style="color:var(--text-muted)">Nao configurado</span>'}<br>
+                    Ollama: ${data.ollama ? '<span style="color:var(--success)">Online</span> (' + esc(data.ollama_model || '') + ')' : '<span style="color:var(--text-muted)">Offline</span>'}<br>
                     Provider ativo: <strong>${data.configured_provider || 'nenhum'}</strong>
                 </div>
             `;
@@ -555,10 +557,12 @@
         async function saveAiConfig() {
             const provider = document.getElementById('configProvider').value;
             const api_key = document.getElementById('configApiKey').value.trim();
-            if (!api_key) { toast('error', 'Informe a API key'); return; }
-
-            const payload = { provider, api_key };
             const model = document.getElementById('configModel').value.trim();
+
+            // Ollama nao precisa de key
+            if (provider !== 'ollama' && !api_key) { toast('error', 'Informe a API key'); return; }
+
+            const payload = { provider, api_key: api_key || 'http://localhost:11434' };
             if (model) payload.model = model;
 
             const res = await fetch(`${API}/api/skills/ai/configure`, {
@@ -579,7 +583,7 @@
                 const res = await fetch(`${API}/api/skills/ai/status`);
                 const data = await res.json();
                 const badge = document.getElementById('aiStatus');
-                const any = data.gemini || data.openai || data.anthropic || data.openrouter;
+                const any = data.gemini || data.openai || data.anthropic || data.openrouter || data.ollama;
                 badge.innerHTML = `
                     <span class="dot ${any ? 'dot-ok' : 'dot-err'}"></span>
                     <span>IA: ${data.configured_provider || (any ? 'disponivel' : 'nao configurada')}</span>
@@ -588,10 +592,16 @@
         }
 
         // === Utils ===
-        // Toggle model field for OpenRouter
+        // Toggle fields based on provider
         document.getElementById('configProvider').addEventListener('change', function() {
-            document.getElementById('modelGroup').style.display = this.value === 'openrouter' ? '' : 'none';
+            const isOllama = this.value === 'ollama';
+            const needsModel = isOllama || this.value === 'openrouter';
+            document.getElementById('modelGroup').style.display = needsModel ? '' : 'none';
+            document.getElementById('apiKeyGroup').style.display = isOllama ? 'none' : '';
+            document.getElementById('configModel').placeholder = isOllama ? 'ex: gemma4:e2b, qwen3-coder, llama3.3' : 'ex: google/gemini-2.0-flash-exp:free';
         });
+        // Trigger on load
+        document.getElementById('configProvider').dispatchEvent(new Event('change'));
 
         function esc(str) {
             if (!str) return '';
