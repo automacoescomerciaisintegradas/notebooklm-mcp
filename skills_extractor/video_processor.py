@@ -62,7 +62,8 @@ class VideoProcessor:
         try:
             from youtube_transcript_api import YouTubeTranscriptApi
 
-            transcript_list = YouTubeTranscriptApi.list_transcripts(video_id)
+            ytt_api = YouTubeTranscriptApi()
+            transcript_list = ytt_api.list(video_id)
 
             # Tentar transcript manual primeiro, depois gerado automaticamente
             transcript = None
@@ -87,14 +88,27 @@ class VideoProcessor:
                 return {"error": "Nenhum transcript encontrado"}
 
             data = transcript.fetch()
-            full_text = " ".join([entry["text"] for entry in data])
-            duration = max(entry["start"] + entry.get("duration", 0) for entry in data) if data else 0
+
+            # Suportar tanto dict quanto objetos com atributos (v1.x)
+            segments = []
+            for entry in data:
+                if isinstance(entry, dict):
+                    segments.append(entry)
+                else:
+                    segments.append({
+                        "text": getattr(entry, "text", str(entry)),
+                        "start": getattr(entry, "start", 0),
+                        "duration": getattr(entry, "duration", 0),
+                    })
+
+            full_text = " ".join([s["text"] for s in segments])
+            duration = max(s["start"] + s.get("duration", 0) for s in segments) if segments else 0
 
             return {
                 "video_id": video_id,
                 "title": self._get_title(video_id),
                 "transcript": full_text,
-                "segments": data,
+                "segments": segments,
                 "language": lang,
                 "duration_seconds": int(duration),
                 "source": "youtube-transcript-api",
