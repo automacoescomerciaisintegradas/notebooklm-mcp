@@ -1,0 +1,23 @@
+{
+  "auto_start": false,
+  "log_level": "INFO",
+  "check_updates": true,
+  "language": "pt-br",
+  "theme": "dark",
+  "refresh_interval_ms": 3000,
+  "default_transport": "stdio",
+  "clients": {
+    "cursor": {
+      "enabled": true,
+      "auto_configure": true
+    },
+    "claude_desktop": {
+      "enabled": true,
+      "auto_configure": false
+    },
+    "antigravity": {
+      "enabled": true,
+      "auto_configure": true
+    }
+  }
+}

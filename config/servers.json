@@ -1,0 +1,14 @@
+{
+  "servers": {
+    "notebooklm-mcp": {
+      "name": "notebooklm-mcp",
+      "command": "nlm",
+      "args": [
+        "serve"
+      ],
+      "transport": "stdio",
+      "env": {},
+      "description": "NotebookLM MCP Server - Acesso programatico ao Google NotebookLM"
+    }
+  }
+}
