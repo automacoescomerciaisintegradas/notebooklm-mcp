@@ -29,6 +29,10 @@ from cli.config_util import (
     get_client_config_path,
 )
 from core.security_guard import SecurityGuard
+from skills_extractor.video_processor import VideoProcessor
+from skills_extractor.ai_extractor import AIExtractor
+from skills_extractor.skill_generator import SkillGenerator
+from skills_extractor.installer import SkillInstaller
 
 app = Flask(
     __name__,
@@ -38,6 +42,10 @@ app = Flask(
 app.config["SECRET_KEY"] = os.urandom(32).hex()
 
 manager = ServerManager(PROJECT_ROOT)
+video_proc = VideoProcessor()
+ai_extractor = AIExtractor()
+skill_gen = SkillGenerator()
+skill_installer = SkillInstaller(PROJECT_ROOT)
 guard = SecurityGuard()
 
 PORT = 5117
@@ -204,6 +212,149 @@ def api_update_config():
         save_app_config(data)
         return jsonify({"success": True})
     return jsonify({"error": "Dados invalidos"}), 400
+
+
+# === Skills Extractor API ===
+
+@app.route("/skills")
+def skills_page():
+    return render_template("skills.html")
+
+
+@app.route("/api/skills/extract", methods=["POST"])
+def api_extract_skills():
+    """Pipeline completo: URL -> Transcript -> AI -> Skill files."""
+    data = request.get_json()
+    urls = data.get("urls", [])
+    provider = data.get("provider")
+
+    if not urls:
+        return jsonify({"error": "Nenhuma URL fornecida"}), 400
+
+    results = []
+
+    for url in urls:
+        url = url.strip()
+        if not url:
+            continue
+
+        # 1) Transcript
+        transcript_data = video_proc.get_transcript(url)
+        if "error" in transcript_data:
+            results.append({"url": url, "error": transcript_data["error"], "stage": "transcript"})
+            continue
+
+        # 2) AI Extraction
+        extraction = ai_extractor.extract_skills(
+            transcript_data.get("transcript", ""),
+            video_title=transcript_data.get("title", ""),
+            provider=provider,
+        )
+        if "error" in extraction:
+            results.append({"url": url, "error": extraction["error"], "stage": "ai_extraction"})
+            continue
+
+        # 3) Generate skill files
+        video_info = {
+            "video_id": transcript_data.get("video_id"),
+            "title": transcript_data.get("title"),
+            "url": url,
+            "duration_seconds": transcript_data.get("duration_seconds"),
+        }
+        generated = skill_gen.generate_all_skills(extraction, video_info)
+
+        results.append({
+            "url": url,
+            "video_title": transcript_data.get("title"),
+            "video_id": transcript_data.get("video_id"),
+            "duration": transcript_data.get("duration_seconds"),
+            "skills_count": len(generated),
+            "skills": generated,
+            "summary": extraction.get("video_summary", ""),
+            "topics": extraction.get("main_topics", []),
+        })
+
+    return jsonify({
+        "success": True,
+        "results": results,
+        "total_videos": len(results),
+        "total_skills": sum(r.get("skills_count", 0) for r in results if "error" not in r),
+    })
+
+
+@app.route("/api/skills/transcript", methods=["POST"])
+def api_get_transcript():
+    """Apenas extrai transcript sem processar com IA."""
+    data = request.get_json()
+    url = data.get("url", "")
+    if not url:
+        return jsonify({"error": "URL nao fornecida"}), 400
+    result = video_proc.get_transcript(url)
+    return jsonify(result)
+
+
+@app.route("/api/skills", methods=["GET"])
+def api_list_skills():
+    """Lista todas as skills extraidas."""
+    skills = skill_gen.list_skills()
+    return jsonify({"skills": skills, "count": len(skills)})
+
+
+@app.route("/api/skills/<slug>", methods=["GET"])
+def api_get_skill(slug):
+    """Detalhes de uma skill."""
+    skill = skill_gen.get_skill(slug)
+    if not skill:
+        return jsonify({"error": "Skill nao encontrada"}), 404
+    return jsonify(skill)
+
+
+@app.route("/api/skills/<slug>", methods=["DELETE"])
+def api_delete_skill(slug):
+    """Remove uma skill."""
+    if skill_gen.delete_skill(slug):
+        return jsonify({"success": True, "message": f"Skill '{slug}' removida"})
+    return jsonify({"error": "Skill nao encontrada"}), 404
+
+
+@app.route("/api/skills/install", methods=["POST"])
+def api_install_skills():
+    """Instala o servidor MCP de skills em um cliente."""
+    data = request.get_json()
+    client = data.get("client", "")
+    result = skill_installer.install_to_client(client)
+    status = 200 if result.get("success") else 400
+    return jsonify(result), status
+
+
+@app.route("/api/skills/install/status", methods=["GET"])
+def api_install_status():
+    """Status de instalacao nos clientes."""
+    return jsonify({"clients": skill_installer.get_install_status()})
+
+
+@app.route("/api/skills/ai/status", methods=["GET"])
+def api_ai_status():
+    """Status das APIs de IA configuradas."""
+    return jsonify(ai_extractor.get_status())
+
+
+@app.route("/api/skills/ai/configure", methods=["POST"])
+def api_configure_ai():
+    """Configura API key de IA."""
+    data = request.get_json()
+    provider = data.get("provider")
+    api_key = data.get("api_key")
+    if not provider or not api_key:
+        return jsonify({"error": "provider e api_key sao obrigatorios"}), 400
+    ai_extractor.set_api_key(provider, api_key)
+    return jsonify({"success": True, "message": f"API key {provider} configurada"})
+
+
+@app.route("/api/skills/config/snippet", methods=["GET"])
+def api_config_snippet():
+    """Retorna snippet de config MCP para copia manual."""
+    return jsonify(skill_installer.generate_config_snippet())
 
 
 # === Health ===

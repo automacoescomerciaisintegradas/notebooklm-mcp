@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Skills Extractor — NotebookLM MCP</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        .extractor-hero {
+            text-align: center;
+            padding: 32px 0 24px;
+        }
+        .extractor-hero h1 { font-size: 28px; margin-bottom: 8px; }
+        .extractor-hero p { color: var(--text-secondary); font-size: 14px; }
+
+        .extract-form {
+            max-width: 720px;
+            margin: 0 auto 32px;
+        }
+
+        .url-input {
+            width: 100%;
+            min-height: 100px;
+            padding: 14px;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            color: var(--text-primary);
+            font-family: 'Cascadia Code', monospace;
+            font-size: 13px;
+            resize: vertical;
+        }
+        .url-input:focus {
+            outline: none;
+            border-color: var(--border-focus);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+        .url-input::placeholder { color: var(--text-muted); }
+
+        .extract-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 12px;
+        }
+
+        .provider-select {
+            padding: 10px 14px;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            color: var(--text-primary);
+            font-size: 13px;
+        }
+
+        .progress-bar {
+            display: none;
+            margin: 16px auto;
+            max-width: 720px;
+        }
+        .progress-bar.active { display: block; }
+        .progress-track {
+            height: 6px;
+            background: var(--bg-card);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), #22c55e);
+            border-radius: 3px;
+            width: 0%;
+            transition: width 0.5s ease;
+            animation: progressPulse 2s ease infinite;
+        }
+        @keyframes progressPulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        .progress-text {
+            text-align: center;
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-top: 8px;
+        }
+
+        .results-section {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .result-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            margin-bottom: 16px;
+        }
+        .result-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        .result-card-header h3 { font-size: 16px; }
+        .result-meta { font-size: 12px; color: var(--text-muted); }
+
+        .skill-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            background: var(--accent-glow);
+            border: 1px solid var(--accent);
+            border-radius: 20px;
+            font-size: 12px;
+            color: var(--accent);
+            margin: 4px;
+            cursor: default;
+        }
+        .skill-chip .chip-remove {
+            cursor: pointer;
+            opacity: 0.6;
+        }
+        .skill-chip .chip-remove:hover { opacity: 1; }
+
+        .skills-list { margin-top: 12px; }
+        .skill-item {
+            padding: 16px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            margin-bottom: 8px;
+        }
+        .skill-item h4 { font-size: 14px; margin-bottom: 4px; }
+        .skill-item p { font-size: 12px; color: var(--text-secondary); margin-bottom: 8px; }
+        .skill-tags span {
+            display: inline-block;
+            padding: 2px 8px;
+            background: var(--bg-input);
+            border-radius: 4px;
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-right: 4px;
+        }
+
+        .tab-bar {
+            display: flex;
+            gap: 0;
+            margin-bottom: 24px;
+            border-bottom: 1px solid var(--border);
+            max-width: 720px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .tab-bar button {
+            flex: 1;
+            padding: 12px;
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid transparent;
+            color: var(--text-secondary);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .tab-bar button.active {
+            color: var(--accent);
+            border-bottom-color: var(--accent);
+        }
+        .tab-bar button:hover { color: var(--text-primary); }
+
+        .my-skills-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px;
+        }
+
+        .my-skill-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 20px;
+        }
+        .my-skill-card h3 { font-size: 15px; margin-bottom: 6px; }
+        .my-skill-card p { font-size: 12px; color: var(--text-secondary); margin-bottom: 12px; }
+        .my-skill-card .skill-meta {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .ai-config-section {
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 24px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+        }
+
+        .install-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 12px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .install-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .install-card h4 { font-size: 14px; }
+        .install-card .install-status {
+            font-size: 11px;
+            margin-top: 4px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-left">
+            <div class="logo">
+                <span class="logo-icon">&#x2728;</span>
+                <span>Skills Extractor</span>
+            </div>
+            <span class="tagline">Extraia skills de videos e use em suas IAs</span>
+        </div>
+        <div class="header-right">
+            <span id="aiStatus" class="health-badge">
+                <span class="dot dot-loading"></span>
+                <span>IA: verificando...</span>
+            </span>
+            <a href="/" class="btn btn-ghost btn-sm">&#9664; Dashboard</a>
+        </div>
+    </header>
+
+    <!-- Main -->
+    <main class="main" style="flex-direction:column;overflow-y:auto;">
+        <div style="padding:24px;max-width:960px;margin:0 auto;width:100%;">
+
+            <!-- Hero -->
+            <div class="extractor-hero">
+                <h1>&#x1F4A1; Skills Extractor</h1>
+                <p>Cole URLs de videos do YouTube, extraia skills praticas com IA e instale no Claude Desktop, Cursor ou Antigravity.</p>
+            </div>
+
+            <!-- Tabs -->
+            <div class="tab-bar">
+                <button class="active" onclick="switchSkillTab('extract')">Extrair Skills</button>
+                <button onclick="switchSkillTab('myskills')">Minhas Skills</button>
+                <button onclick="switchSkillTab('install')">Instalar</button>
+                <button onclick="switchSkillTab('config')">Configurar IA</button>
+            </div>
+
+            <!-- Tab: Extract -->
+            <div id="tab-extract" class="tab-content active">
+                <div class="extract-form">
+                    <label style="font-size:12px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:8px;">URLs dos videos</label>
+                    <textarea id="urlInput" class="url-input" placeholder="https://www.youtube.com/watch?v=...&#10;Cole uma ou mais URLs (uma por linha)"></textarea>
+
+                    <div class="extract-actions">
+                        <select id="providerSelect" class="provider-select">
+                            <option value="">Auto-detect IA</option>
+                            <option value="gemini">Google Gemini</option>
+                            <option value="openai">OpenAI GPT</option>
+                            <option value="anthropic">Anthropic Claude</option>
+                        </select>
+                        <button class="btn btn-primary" onclick="extractSkills()" id="extractBtn">
+                            &#x2728; Extrair Skills
+                        </button>
+                        <span id="urlCount" style="font-size:12px;color:var(--text-muted);"></span>
+                    </div>
+                </div>
+
+                <!-- Progress -->
+                <div id="progressBar" class="progress-bar">
+                    <div class="progress-track">
+                        <div id="progressFill" class="progress-fill"></div>
+                    </div>
+                    <div id="progressText" class="progress-text">Extraindo skills...</div>
+                </div>
+
+                <!-- Results -->
+                <div id="extractResults" class="results-section"></div>
+            </div>
+
+            <!-- Tab: My Skills -->
+            <div id="tab-myskills" class="tab-content">
+                <div class="content-header" style="max-width:900px;margin:0 auto 16px;">
+                    <h2>Minhas Skills</h2>
+                    <button class="btn btn-ghost btn-sm" onclick="loadMySkills()">Atualizar</button>
+                </div>
+                <div id="mySkillsGrid" class="my-skills-grid" style="max-width:900px;margin:0 auto;"></div>
+            </div>
+
+            <!-- Tab: Install -->
+            <div id="tab-install" class="tab-content">
+                <div style="text-align:center;margin-bottom:24px;">
+                    <h2>Instalar nos Clientes MCP</h2>
+                    <p style="color:var(--text-secondary);font-size:13px;">Registra o servidor MCP de skills no cliente escolhido.</p>
+                </div>
+                <div id="installGrid" class="install-grid"></div>
+                <div style="max-width:600px;margin:24px auto 0;">
+                    <h3 style="font-size:14px;margin-bottom:8px;">Config MCP (copiar manualmente)</h3>
+                    <pre id="configSnippet" class="log-viewer" style="max-height:200px;font-size:12px;"></pre>
+                </div>
+            </div>
+
+            <!-- Tab: Config IA -->
+            <div id="tab-config" class="tab-content">
+                <div class="ai-config-section">
+                    <h2 style="font-size:18px;margin-bottom:16px;">Configurar API de IA</h2>
+                    <div class="form-group">
+                        <label>Provider</label>
+                        <select id="configProvider" class="select">
+                            <option value="gemini">Google Gemini</option>
+                            <option value="openai">OpenAI</option>
+                            <option value="anthropic">Anthropic Claude</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>API Key</label>
+                        <input id="configApiKey" class="input" type="password" placeholder="Sua API key..." />
+                    </div>
+                    <button class="btn btn-primary" onclick="saveAiConfig()">Salvar</button>
+                    <div id="aiConfigStatus" style="margin-top:16px;"></div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <span>&copy; Automacoes Comerciais Integradas 2026</span>
+        <span>Skills Extractor v1.2.0</span>
+    </footer>
+
+    <!-- Toast -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <script>
+        const API = '';
+
+        // Tab switching
+        function switchSkillTab(tab) {
+            document.querySelectorAll('#tab-extract,#tab-myskills,#tab-install,#tab-config').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-bar button').forEach(el => el.classList.remove('active'));
+            document.getElementById(`tab-${tab}`).classList.add('active');
+            event.target.classList.add('active');
+
+            if (tab === 'myskills') loadMySkills();
+            if (tab === 'install') loadInstallStatus();
+            if (tab === 'config') loadAiStatus();
+        }
+
+        // URL counter
+        document.getElementById('urlInput').addEventListener('input', function() {
+            const urls = this.value.split('\n').filter(u => u.trim().includes('youtu'));
+            document.getElementById('urlCount').textContent = urls.length ? `${urls.length} video(s)` : '';
+        });
+
+        // === Extract Skills ===
+        async function extractSkills() {
+            const input = document.getElementById('urlInput').value;
+            const urls = input.split('\n').filter(u => u.trim());
+            if (!urls.length) { toast('error', 'Cole pelo menos uma URL'); return; }
+
+            const provider = document.getElementById('providerSelect').value || undefined;
+            const btn = document.getElementById('extractBtn');
+            const progress = document.getElementById('progressBar');
+            const fill = document.getElementById('progressFill');
+            const text = document.getElementById('progressText');
+
+            btn.disabled = true;
+            btn.textContent = 'Extraindo...';
+            progress.classList.add('active');
+            fill.style.width = '30%';
+            text.textContent = `Processando ${urls.length} video(s)... Extraindo transcripts...`;
+
+            try {
+                fill.style.width = '50%';
+                text.textContent = 'Processando com IA... Gerando skills...';
+
+                const res = await fetch(`${API}/api/skills/extract`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ urls, provider }),
+                });
+                const data = await res.json();
+
+                fill.style.width = '100%';
+                text.textContent = `Pronto! ${data.total_skills || 0} skills extraidas.`;
+
+                renderResults(data);
+                toast('success', `${data.total_skills || 0} skills extraidas de ${data.total_videos || 0} video(s)`);
+
+            } catch (e) {
+                toast('error', `Erro: ${e.message}`);
+                text.textContent = 'Erro na extracao.';
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '\u2728 Extrair Skills';
+                setTimeout(() => progress.classList.remove('active'), 3000);
+            }
+        }
+
+        function renderResults(data) {
+            const container = document.getElementById('extractResults');
+            if (!data.results || !data.results.length) {
+                container.innerHTML = '<p class="empty-state">Nenhum resultado.</p>';
+                return;
+            }
+
+            container.innerHTML = data.results.map(r => {
+                if (r.error) {
+                    return `<div class="result-card" style="border-color:var(--danger);">
+                        <h3 style="color:var(--danger);">Erro: ${esc(r.url)}</h3>
+                        <p style="color:var(--text-muted);">[${r.stage}] ${esc(r.error)}</p>
+                    </div>`;
+                }
+                return `<div class="result-card">
+                    <div class="result-card-header">
+                        <h3>${esc(r.video_title)}</h3>
+                        <span class="result-meta">${r.skills_count} skill(s) &bull; ${formatDuration(r.duration)}</span>
+                    </div>
+                    ${r.summary ? `<p style="color:var(--text-secondary);font-size:13px;margin-bottom:12px;">${esc(r.summary)}</p>` : ''}
+                    ${r.topics && r.topics.length ? `<div style="margin-bottom:12px;">${r.topics.map(t => `<span class="skill-chip">${esc(t)}</span>`).join('')}</div>` : ''}
+                    <div class="skills-list">
+                        ${(r.skills || []).map(s => `
+                            <div class="skill-item">
+                                <h4>${esc(s.name)}</h4>
+                                <p>Salva em: <code style="font-size:11px;color:var(--accent);">${esc(s.path)}</code></p>
+                                <div class="skill-tags">
+                                    ${(s.files || []).map(f => `<span>${esc(f.split(/[\\/]/).pop())}</span>`).join('')}
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        // === My Skills ===
+        async function loadMySkills() {
+            const grid = document.getElementById('mySkillsGrid');
+            try {
+                const res = await fetch(`${API}/api/skills`);
+                const data = await res.json();
+
+                if (!data.skills.length) {
+                    grid.innerHTML = '<p class="empty-state">Nenhuma skill extraida ainda. Va na aba "Extrair Skills" para comecar.</p>';
+                    return;
+                }
+
+                grid.innerHTML = data.skills.map(s => `
+                    <div class="my-skill-card">
+                        <h3>${esc(s.name)}</h3>
+                        <p>${esc(s.description || '')}</p>
+                        <div class="skill-meta">
+                            Categoria: ${esc(s.category || 'geral')} &bull; ${esc(s.difficulty || 'intermediate')}
+                        </div>
+                        <div class="skill-tags" style="margin-bottom:12px;">
+                            ${(s.tags || []).map(t => `<span>${esc(t)}</span>`).join('')}
+                        </div>
+                        <button class="btn btn-danger btn-sm" onclick="deleteSkill('${esc(s.slug)}')">Remover</button>
+                    </div>
+                `).join('');
+            } catch (e) {
+                grid.innerHTML = '<p class="text-muted">Erro ao carregar skills.</p>';
+            }
+        }
+
+        async function deleteSkill(slug) {
+            if (!confirm(`Remover skill "${slug}"?`)) return;
+            await fetch(`${API}/api/skills/${encodeURIComponent(slug)}`, { method: 'DELETE' });
+            toast('success', 'Skill removida');
+            loadMySkills();
+        }
+
+        // === Install ===
+        async function loadInstallStatus() {
+            const grid = document.getElementById('installGrid');
+            try {
+                const res = await fetch(`${API}/api/skills/install/status`);
+                const data = await res.json();
+                grid.innerHTML = data.clients.map(c => `
+                    <div class="install-card">
+                        <div>
+                            <h4>${esc(c.client)}</h4>
+                            <div class="install-status" style="color:${c.installed ? 'var(--success)' : 'var(--text-muted)'};">
+                                ${c.installed ? 'Instalado' : 'Nao instalado'}
+                            </div>
+                        </div>
+                        <button class="btn ${c.installed ? 'btn-ghost' : 'btn-primary'} btn-sm"
+                            onclick="installTo('${esc(c.client)}')">
+                            ${c.installed ? 'Reinstalar' : 'Instalar'}
+                        </button>
+                    </div>
+                `).join('');
+
+                // Config snippet
+                const snippetRes = await fetch(`${API}/api/skills/config/snippet`);
+                const snippet = await snippetRes.json();
+                document.getElementById('configSnippet').textContent = JSON.stringify(snippet, null, 2);
+            } catch (e) {
+                grid.innerHTML = '<p class="text-muted">Erro ao carregar.</p>';
+            }
+        }
+
+        async function installTo(client) {
+            const res = await fetch(`${API}/api/skills/install`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ client }),
+            });
+            const data = await res.json();
+            toast(data.success ? 'success' : 'error', data.message || data.error);
+            loadInstallStatus();
+        }
+
+        // === AI Config ===
+        async function loadAiStatus() {
+            const res = await fetch(`${API}/api/skills/ai/status`);
+            const data = await res.json();
+            const el = document.getElementById('aiConfigStatus');
+            el.innerHTML = `
+                <div style="font-size:13px;color:var(--text-secondary);">
+                    <strong>Status:</strong><br>
+                    Gemini: ${data.gemini ? '<span style="color:var(--success)">Configurado</span>' : '<span style="color:var(--text-muted)">Nao configurado</span>'}<br>
+                    OpenAI: ${data.openai ? '<span style="color:var(--success)">Configurado</span>' : '<span style="color:var(--text-muted)">Nao configurado</span>'}<br>
+                    Anthropic: ${data.anthropic ? '<span style="color:var(--success)">Configurado</span>' : '<span style="color:var(--text-muted)">Nao configurado</span>'}<br>
+                    Provider ativo: <strong>${data.configured_provider || 'nenhum'}</strong>
+                </div>
+            `;
+        }
+
+        async function saveAiConfig() {
+            const provider = document.getElementById('configProvider').value;
+            const api_key = document.getElementById('configApiKey').value.trim();
+            if (!api_key) { toast('error', 'Informe a API key'); return; }
+
+            const res = await fetch(`${API}/api/skills/ai/configure`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ provider, api_key }),
+            });
+            const data = await res.json();
+            toast(data.success ? 'success' : 'error', data.message || data.error);
+            document.getElementById('configApiKey').value = '';
+            loadAiStatus();
+            refreshAiBadge();
+        }
+
+        // === AI Badge ===
+        async function refreshAiBadge() {
+            try {
+                const res = await fetch(`${API}/api/skills/ai/status`);
+                const data = await res.json();
+                const badge = document.getElementById('aiStatus');
+                const any = data.gemini || data.openai || data.anthropic;
+                badge.innerHTML = `
+                    <span class="dot ${any ? 'dot-ok' : 'dot-err'}"></span>
+                    <span>IA: ${data.configured_provider || (any ? 'disponivel' : 'nao configurada')}</span>
+                `;
+            } catch (e) {}
+        }
+
+        // === Utils ===
+        function esc(str) {
+            if (!str) return '';
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        function toast(type, msg) {
+            const c = document.getElementById('toastContainer');
+            const el = document.createElement('div');
+            el.className = `toast toast-${type}`;
+            el.textContent = msg;
+            c.appendChild(el);
+            setTimeout(() => el.remove(), 4000);
+        }
+
+        function formatDuration(sec) {
+            if (!sec) return '';
+            const m = Math.floor(sec / 60);
+            const s = sec % 60;
+            return `${m}:${String(s).padStart(2, '0')}`;
+        }
+
+        // Init
+        refreshAiBadge();
+    </script>
+</body>
+</html>
