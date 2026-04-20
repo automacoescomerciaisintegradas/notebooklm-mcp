@@ -271,6 +271,7 @@ class AIExtractor:
                     {"role": "user", "content": prompt},
                 ],
                 temperature=0.3,
+                max_tokens=4096,
             )
 
             content = response.choices[0].message.content
