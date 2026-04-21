@@ -154,3 +154,32 @@ Thumbs.db
 # OS
 Thumbs.db
 .DS_Store
+
+# ============================================
+# SEGREDOS E CHAVES DE API - NUNCA COMMITAR
+# ============================================
+config/skills_config.json
+config/security.json
+.env
+.env.local
+.env.*.local
+.env.production
+.env.development
+.env.test
+secrets.json
+secrets/
+credentials/
+*.secret
+*.credentials
+keys/
+
+# Chaves e certificados privados
+*.key
+*.pem
+*.p12
+*.pfx
+*.crt
+*.cer
+
+# MCP config (pode conter tokens)
+.mcp.json

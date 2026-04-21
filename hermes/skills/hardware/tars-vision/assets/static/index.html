@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TARS // MARK XXXV Interface</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
+</head>
+<body>
+    <div id="overlay"></div>
+    <div id="canvas-container"></div>
+
+    <div class="hud-container">
+        <header>
+            <div class="logo">
+                <span class="tars-glitch">TARS</span>
+                <span class="version">// M.A.R.K. XXXV</span>
+            </div>
+            <div id="clock" class="digital-clock">00:00:00</div>
+        </header>
+
+        <main>
+            <div class="status-panel">
+                <div class="status-line"><span class="label">SYS:</span> <span id="status-text">INIT_SEQUENCE...</span></div>
+                <div class="status-line"><span class="label">CORE:</span> <span id="core-status">GEMINI_FLASH_STABLE</span></div>
+                <div class="status-line"><span class="label">MOOD:</span> <span id="emotion-text">NEUTRAL</span></div>
+            </div>
+
+            <div class="terminal-container">
+                <div id="terminal" class="terminal-log">
+                    <p class="sys-msg">> TARS Vision Core Online.</p>
+                </div>
+                <div class="input-area">
+                    <span class="prompt">></span>
+                    <input type="text" id="command-input" placeholder="Aguardando comando..." autocomplete="off">
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <div class="controls">
+                <button id="enable-cam" class="btn-neon">
+                    <span class="icon">📷</span> VISION
+                </button>
+                <button id="ptt-btn" class="btn-neon ptt-inactive">
+                    <span class="pulse-ring"></span>
+                    <span class="icon">🎤</span> SPEAK
+                </button>
+            </div>
+            <div class="footer-info">
+                HONESTY: 90% | HUMOR: 75%
+            </div>
+        </footer>
+    </div>
+
+    <video id="webcam" autoplay playsinline style="display: none;"></video>
+    <script src="main.js"></script>
+</body>
+</html>

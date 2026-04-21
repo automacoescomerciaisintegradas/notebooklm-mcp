@@ -1,0 +1,14 @@
+{
+  "name": "tars-vision",
+  "category": "hardware",
+  "description": "Holographic face with gesture control, face/mood recognition, and voice pipeline.",
+  "author": "MayukhBuilds",
+  "version": "1.0.0",
+  "entry_point": "run.ps1",
+  "dependencies": [
+    "whisper",
+    "openai",
+    "huskylens",
+    "threejs"
+  ]
+}
