@@ -1,4 +1,4 @@
-# Security Policy
+# Security Policy 🛡️ Protocolo de Defesa Predidiva (SecurityGuard)
 
 ## Supported Versions
 
