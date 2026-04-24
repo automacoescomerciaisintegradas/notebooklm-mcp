@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cleudocode Design Tokens Reference</title>
+    <link rel="stylesheet" href="design-tokens.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: var(--font-sans);
+            padding: var(--space-8);
+            line-height: var(--leading-normal);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            font-size: var(--font-6xl);
+            font-weight: var(--font-black);
+            font-style: italic;
+            margin-bottom: var(--space-2);
+            letter-spacing: -2px;
+        }
+        
+        h2 {
+            font-size: var(--font-3xl);
+            font-weight: var(--font-bold);
+            margin: var(--space-12) 0 var(--space-6) 0;
+            color: var(--brand-primary);
+        }
+        
+        h3 {
+            font-size: var(--font-xl);
+            font-weight: var(--font-semibold);
+            margin: var(--space-6) 0 var(--space-4) 0;
+        }
+        
+        .subtitle {
+            font-size: var(--font-xl);
+            color: var(--text-secondary);
+            margin-bottom: var(--space-12);
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: var(--space-6);
+            margin-bottom: var(--space-8);
+        }
+        
+        .color-swatch {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-xl);
+            padding: var(--space-6);
+            transition: all var(--transition-base);
+        }
+        
+        .color-swatch:hover {
+            background: var(--bg-hover);
+            border-color: var(--border-default);
+            transform: translateY(-2px);
+        }
+        
+        .color-preview {
+            width: 100%;
+            height: 80px;
+            border-radius: var(--radius-lg);
+            margin-bottom: var(--space-4);
+            border: 1px solid var(--border-subtle);
+        }
+        
+        .color-name {
+            font-weight: var(--font-semibold);
+            font-size: var(--font-base);
+            margin-bottom: var(--space-2);
+        }
+        
+        .color-value {
+            font-family: var(--font-mono);
+            font-size: var(--font-sm);
+            color: var(--text-tertiary);
+        }
+        
+        .font-sample {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-xl);
+            padding: var(--space-6);
+            margin-bottom: var(--space-6);
+        }
+        
+        .font-meta {
+            display: flex;
+            gap: var(--space-4);
+            flex-wrap: wrap;
+            margin-top: var(--space-4);
+            padding-top: var(--space-4);
+            border-top: 1px solid var(--border-subtle);
+        }
+        
+        .font-meta-item {
+            font-family: var(--font-mono);
+            font-size: var(--font-xs);
+            color: var(--text-tertiary);
+            background: var(--bg-hover);
+            padding: var(--space-2) var(--space-3);
+            border-radius: var(--radius-base);
+        }
+        
+        .component-showcase {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-6);
+        }
+        
+        .component-example {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-xl);
+            padding: var(--space-8);
+        }
+        
+        .component-label {
+            font-size: var(--font-sm);
+            color: var(--text-tertiary);
+            margin-bottom: var(--space-4);
+            text-transform: uppercase;
+            letter-spacing: var(--tracking-wide);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>CLEUDOCODE</h1>
+        <div class="subtitle">Design Tokens Reference Guide</div>
+        
+        <!-- Brand Colors -->
+        <h2>🎨 Brand Colors</h2>
+        <div class="grid">
+            <div class="color-swatch">
+                <div class="color-preview" style="background: var(--brand-primary);"></div>
+                <div class="color-name">Primary</div>
+                <div class="color-value">#FF5F5F</div>
+            </div>
+            <div class="color-swatch">
+                <div class="color-preview" style="background: var(--brand-secondary);"></div>
+                <div class="color-name">Secondary</div>
+                <div class="color-value">#6366F1</div>
+            </div>
+            <div class="color-swatch">
+                <div class="color-preview" style="background: var(--brand-accent);"></div>
+                <div class="color-name">Accent</div>
+                <div class="color-value">#10B981</div>
+            </div>
+            <div class="color-swatch">
+                <div class="color-preview" style="background: var(--brand-warning);"></div>
+                <div class="color-name">Warning</div>
+                <div class="color-value">#FB923C</div>
+            </div>
+        </div>
+        
+        <!-- Background Colors -->
+        <h2>🖼️ Background Colors</h2>
+        <div class="grid">
+            <div class="color-swatch">
+                <div class="color-preview" style="background: var(--bg-primary); border: 1px solid #333;"></div>
+                <div class="color-name">Primary</div>
+                <div class="color-value">#080808</div>
+            </div>
+            <div class="color-swatch">
+                <div class="color-preview" style="background: var(--bg-secondary); border: 1px solid #333;"></div>
+                <div class="color-name">Secondary</div>
+                <div class="color-value">#0A0A0A</div>
+            </div>
+            <div class="color-swatch">
+                <div class="color-preview" style="background: var(--bg-elevated); border: 1px solid #333;"></div>
+                <div class="color-name">Elevated</div>
+                <div class="color-value">rgba(255, 255, 255, 0.02)</div>
+            </div>
+            <div class="color-swatch">
+                <div class="color-preview" style="background: var(--bg-hover); border: 1px solid #333;"></div>
+                <div class="color-name">Hover</div>
+                <div class="color-value">rgba(255, 255, 255, 0.05)</div>
+            </div>
+        </div>
+        
+        <!-- Text Colors -->
+        <h2>📝 Text Colors</h2>
+        <div class="grid">
+            <div class="color-swatch">
+                <div class="color-preview" style="background: var(--text-primary);"></div>
+                <div class="color-name">Primary</div>
+                <div class="color-value">#FFFFFF</div>
+            </div>
+            <div class="color-swatch">
+                <div class="color-preview" style="background: var(--text-secondary);"></div>
+                <div class="color-name">Secondary</div>
+                <div class="color-value">#94A3B8</div>
+            </div>
+            <div class="color-swatch">
+                <div class="color-preview" style="background: var(--text-tertiary);"></div>
+                <div class="color-name">Tertiary</div>
+                <div class="color-value">#64748B</div>
+            </div>
+            <div class="color-swatch">
+                <div class="color-preview" style="background: var(--text-muted);"></div>
+                <div class="color-name">Muted</div>
+                <div class="color-value">#6B7280</div>
+            </div>
+        </div>
+        
+        <!-- Semantic Colors -->
+        <h2>✅ Semantic Colors</h2>
+        <div class="grid">
+            <div class="color-swatch">
+                <div class="color-preview" style="background: var(--color-success);"></div>
+                <div class="color-name">Success</div>
+                <div class="color-value">#10B981</div>
+            </div>
+            <div class="color-swatch">
+                <div class="color-preview" style="background: var(--color-warning);"></div>
+                <div class="color-name">Warning</div>
+                <div class="color-value">#F59E0B</div>
+            </div>
+            <div class="color-swatch">
+                <div class="color-preview" style="background: var(--color-error);"></div>
+                <div class="color-name">Error</div>
+                <div class="color-value">#EF4444</div>
+            </div>
+            <div class="color-swatch">
+                <div class="color-preview" style="background: var(--color-info);"></div>
+                <div class="color-name">Info</div>
+                <div class="color-value">#6366F1</div>
+            </div>
+        </div>
+        
+        <!-- Typography -->
+        <h2>🔤 Typography</h2>
+        
+        <h3>Hero Heading (7xl)</h3>
+        <div class="font-sample">
+            <div class="hero-heading">CLEUDOCODE</div>
+            <div class="font-meta">
+                <span class="font-meta-item">Font: Inter</span>
+                <span class="font-meta-item">Size: 72px</span>
+                <span class="font-meta-item">Weight: 900</span>
+                <span class="font-meta-item">Style: Italic</span>
+                <span class="font-meta-item">Spacing: -3.6px</span>
+            </div>
+        </div>
+        
+        <h3>Tagline (xl)</h3>
+        <div class="font-sample">
+            <div class="hero-tagline">THE AI THAT ACTUALLY DOES THINGS.</div>
+            <div class="font-meta">
+                <span class="font-meta-item">Font: Inter</span>
+                <span class="font-meta-item">Size: 20px</span>
+                <span class="font-meta-item">Weight: 500</span>
+                <span class="font-meta-item">Color: #FF5F5F</span>
+            </div>
+        </div>
+        
+        <h3>Body Text (xl)</h3>
+        <div class="font-sample">
+            <div class="hero-description">
+                Gerencia seus projetos, cria sistemas e executa tarefas reais. 
+                Tudo local, privado e 100% sob seu controle.
+            </div>
+            <div class="font-meta">
+                <span class="font-meta-item">Font: Inter</span>
+                <span class="font-meta-item">Size: 20px</span>
+                <span class="font-meta-item">Weight: 500</span>
+                <span class="font-meta-item">Color: #94A3B8</span>
+            </div>
+        </div>
+        
+        <h3>Font Size Scale</h3>
+        <div class="font-sample">
+            <div style="font-size: var(--font-7xl); margin-bottom: 1rem;">7xl - 72px</div>
+            <div style="font-size: var(--font-6xl); margin-bottom: 1rem;">6xl - 60px</div>
+            <div style="font-size: var(--font-5xl); margin-bottom: 1rem;">5xl - 48px</div>
+            <div style="font-size: var(--font-4xl); margin-bottom: 1rem;">4xl - 36px</div>
+            <div style="font-size: var(--font-3xl); margin-bottom: 1rem;">3xl - 30px</div>
+            <div style="font-size: var(--font-2xl); margin-bottom: 1rem;">2xl - 24px</div>
+            <div style="font-size: var(--font-xl); margin-bottom: 1rem;">xl - 20px</div>
+            <div style="font-size: var(--font-lg); margin-bottom: 1rem;">lg - 18px</div>
+            <div style="font-size: var(--font-base); margin-bottom: 1rem;">base - 16px</div>
+            <div style="font-size: var(--font-sm); margin-bottom: 1rem;">sm - 14px</div>
+            <div style="font-size: var(--font-xs);">xs - 12px</div>
+        </div>
+        
+        <!-- Components -->
+        <h2>🧩 Components</h2>
+        
+        <div class="component-showcase">
+            <div class="component-example">
+                <div class="component-label">Buttons</div>
+                <div style="display: flex; gap: var(--space-4); flex-wrap: wrap;">
+                    <button class="btn-primary">Primary Button</button>
+                    <button class="btn-secondary">Secondary Button</button>
+                </div>
+            </div>
+            
+            <div class="component-example">
+                <div class="component-label">Icon Circles</div>
+                <div style="display: flex; gap: var(--space-4);">
+                    <div class="icon-circle" style="width: 80px; height: 80px;">🤖</div>
+                    <div class="icon-circle" style="width: 80px; height: 80px;">🚀</div>
+                    <div class="icon-circle" style="width: 80px; height: 80px;">⚡</div>
+                </div>
+            </div>
+            
+            <div class="component-example">
+                <div class="component-label">Status Badges</div>
+                <div style="display: flex; gap: var(--space-3); flex-wrap: wrap;">
+                    <span class="badge badge-success">✓ Success</span>
+                    <span class="badge badge-warning">⚠ Warning</span>
+                    <span class="badge badge-error">✗ Error</span>
+                    <span class="badge badge-info">ℹ Info</span>
+                </div>
+            </div>
+            
+            <div class="component-example">
+                <div class="component-label">Card</div>
+                <div class="card">
+                    <h3 style="margin-bottom: var(--space-3);">Card Title</h3>
+                    <p style="color: var(--text-secondary);">
+                        This is a sample card component using the design tokens. 
+                        Hover over it to see the transition effect.
+                    </p>
+                </div>
+            </div>
+            
+            <div class="component-example">
+                <div class="component-label">Terminal</div>
+                <div class="terminal">
+                    <div class="terminal-header">
+                        <div class="terminal-dot red"></div>
+                        <div class="terminal-dot yellow"></div>
+                        <div class="terminal-dot green"></div>
+                        <span style="margin-left: var(--space-4); color: var(--text-tertiary);">
+                            CLEUDO_CODE v0.50.0
+                        </span>
+                    </div>
+                    <div style="padding: var(--space-6); color: var(--text-secondary);">
+                        <div>$ npm install @cleudocode/core</div>
+                        <div style="color: var(--status-green); margin-top: var(--space-2);">
+                            ✓ Installation complete
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div style="margin-top: var(--space-16); padding-top: var(--space-8); border-top: 1px solid var(--border-subtle); text-align: center; color: var(--text-tertiary); font-size: var(--font-sm);">
+            <p>Cleudocode Design Tokens v1.0.0</p>
+            <p style="margin-top: var(--space-2);">
+                Extracted from http://localhost:18900/ • 2026-02-11
+            </p>
+        </div>
+    </div>
+</body>
+</html>

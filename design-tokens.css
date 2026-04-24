@@ -1,0 +1,366 @@
+/**
+ * Cleudocode Design Tokens
+ * Extracted from the landing page at http://localhost:18900/
+ * 
+ * Usage:
+ * - Import this file in your CSS/SCSS files
+ * - Use var(--token-name) to reference tokens
+ * - Compatible with Streamlit custom CSS, Next.js, React, etc.
+ */
+
+:root {
+  /* ==================== COLORS ==================== */
+  
+  /* Brand Colors */
+  --brand-primary: #FF5F5F;        /* Coral/Salmon Red */
+  --brand-secondary: #6366F1;      /* Indigo */
+  --brand-accent: #10B981;         /* Emerald Green */
+  --brand-warning: #FB923C;        /* Orange */
+  
+  /* Background Colors */
+  --bg-primary: #080808;           /* Almost Black */
+  --bg-secondary: #0A0A0A;         /* Very Dark Gray */
+  --bg-tertiary: rgb(15, 22, 41);  /* Dark Blue-Gray */
+  --bg-elevated: rgba(255, 255, 255, 0.02); /* Subtle Elevated */
+  --bg-hover: rgba(255, 255, 255, 0.05);    /* Hover State */
+  --bg-active: rgba(255, 255, 255, 0.08);   /* Active State */
+  
+  /* Text Colors */
+  --text-primary: #FFFFFF;         /* White */
+  --text-secondary: #94A3B8;       /* Gray-Blue */
+  --text-tertiary: #64748B;        /* Darker Gray-Blue */
+  --text-muted: #6B7280;           /* Muted Gray */
+  --text-disabled: rgb(71, 85, 105); /* Disabled Gray */
+  
+  /* Border Colors */
+  --border-subtle: rgba(255, 255, 255, 0.05);
+  --border-default: rgba(255, 255, 255, 0.1);
+  --border-strong: rgba(255, 255, 255, 0.2);
+  
+  /* Semantic Colors */
+  --color-success: #10B981;        /* Green */
+  --color-success-bg: rgba(16, 185, 129, 0.2);
+  --color-warning: #F59E0B;        /* Amber */
+  --color-warning-bg: rgba(245, 158, 11, 0.2);
+  --color-error: #EF4444;          /* Red */
+  --color-error-bg: rgba(239, 68, 68, 0.2);
+  --color-info: #6366F1;           /* Indigo */
+  --color-info-bg: rgba(99, 102, 241, 0.2);
+  
+  /* Status Indicators */
+  --status-green: #34D399;         /* Light Green */
+  --status-red: #FF5F5F;           /* Coral Red */
+  --status-blue: #818CF8;          /* Light Indigo */
+  --status-orange: #FBBF24;        /* Amber */
+  --status-purple: #C084FC;        /* Purple */
+  
+  /* Accent Variants */
+  --accent-coral-light: rgba(255, 95, 95, 0.4);
+  --accent-indigo-light: rgba(99, 102, 241, 0.4);
+  --accent-orange-light: rgba(245, 158, 11, 0.4);
+  
+  /* Overlay & Shadow */
+  --overlay-dark: rgba(0, 0, 0, 0.4);
+  --overlay-darker: rgba(3, 3, 3, 0.4);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.5);
+  --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.5);
+  
+  /* ==================== TYPOGRAPHY ==================== */
+  
+  /* Font Families */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'Consolas', 'Monaco', 'Courier New', monospace;
+  
+  /* Font Sizes */
+  --font-xs: 12px;
+  --font-sm: 14px;
+  --font-base: 16px;
+  --font-lg: 18px;
+  --font-xl: 20px;
+  --font-2xl: 24px;
+  --font-3xl: 30px;
+  --font-4xl: 36px;
+  --font-5xl: 48px;
+  --font-6xl: 60px;
+  --font-7xl: 72px;
+  
+  /* Font Weights */
+  --font-normal: 400;
+  --font-medium: 500;
+  --font-semibold: 600;
+  --font-bold: 700;
+  --font-extrabold: 800;
+  --font-black: 900;
+  
+  /* Line Heights */
+  --leading-tight: 1.25;
+  --leading-snug: 1.375;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.625;
+  --leading-loose: 2;
+  
+  /* Letter Spacing */
+  --tracking-tighter: -0.05em;
+  --tracking-tight: -0.025em;
+  --tracking-normal: 0;
+  --tracking-wide: 0.025em;
+  --tracking-wider: 0.05em;
+  --tracking-widest: 0.1em;
+  
+  /* ==================== SPACING ==================== */
+  
+  --space-0: 0;
+  --space-1: 0.25rem;    /* 4px */
+  --space-2: 0.5rem;     /* 8px */
+  --space-3: 0.75rem;    /* 12px */
+  --space-4: 1rem;       /* 16px */
+  --space-5: 1.25rem;    /* 20px */
+  --space-6: 1.5rem;     /* 24px */
+  --space-8: 2rem;       /* 32px */
+  --space-10: 2.5rem;    /* 40px */
+  --space-12: 3rem;      /* 48px */
+  --space-16: 4rem;      /* 64px */
+  --space-20: 5rem;      /* 80px */
+  --space-24: 6rem;      /* 96px */
+  
+  /* ==================== BORDER RADIUS ==================== */
+  
+  --radius-none: 0;
+  --radius-sm: 0.125rem;   /* 2px */
+  --radius-base: 0.25rem;  /* 4px */
+  --radius-md: 0.375rem;   /* 6px */
+  --radius-lg: 0.5rem;     /* 8px */
+  --radius-xl: 0.75rem;    /* 12px */
+  --radius-2xl: 1rem;      /* 16px */
+  --radius-3xl: 1.5rem;    /* 24px */
+  --radius-full: 9999px;
+  
+  /* ==================== TRANSITIONS ==================== */
+  
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-base: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 350ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slower: 500ms cubic-bezier(0.4, 0, 0.2, 1);
+  
+  /* ==================== Z-INDEX ==================== */
+  
+  --z-base: 1;
+  --z-dropdown: 1000;
+  --z-sticky: 1100;
+  --z-fixed: 1200;
+  --z-modal-backdrop: 1300;
+  --z-modal: 1400;
+  --z-popover: 1500;
+  --z-tooltip: 1600;
+  --z-notification: 1700;
+}
+
+/* ==================== COMPONENT-SPECIFIC TOKENS ==================== */
+
+/* Hero Section */
+.hero-heading {
+  font-family: var(--font-sans);
+  font-size: var(--font-7xl);
+  font-weight: var(--font-black);
+  font-style: italic;
+  color: var(--text-primary);
+  letter-spacing: -3.6px;
+  line-height: 1.1;
+}
+
+.hero-tagline {
+  font-family: var(--font-sans);
+  font-size: var(--font-xl);
+  font-weight: var(--font-medium);
+  color: var(--brand-primary);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+}
+
+.hero-description {
+  font-family: var(--font-sans);
+  font-size: var(--font-xl);
+  font-weight: var(--font-medium);
+  color: var(--text-secondary);
+  line-height: var(--leading-relaxed);
+}
+
+/* Icon Circles */
+.icon-circle {
+  background: var(--brand-primary);
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-primary);
+}
+
+/* Navigation */
+.nav-link {
+  font-family: var(--font-sans);
+  font-size: var(--font-sm);
+  font-weight: var(--font-medium);
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wider);
+  transition: color var(--transition-fast);
+}
+
+.nav-link:hover {
+  color: var(--text-primary);
+}
+
+.nav-link.active {
+  color: var(--brand-primary);
+}
+
+/* Cards */
+.card {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-2xl);
+  padding: var(--space-6);
+  transition: all var(--transition-base);
+}
+
+.card:hover {
+  background: var(--bg-hover);
+  border-color: var(--border-default);
+  transform: translateY(-2px);
+}
+
+/* Buttons */
+.btn-primary {
+  background: var(--brand-primary);
+  color: var(--text-primary);
+  font-weight: var(--font-semibold);
+  padding: var(--space-3) var(--space-6);
+  border-radius: var(--radius-lg);
+  border: none;
+  transition: all var(--transition-fast);
+  cursor: pointer;
+}
+
+.btn-primary:hover {
+  background: #ff7a7a;
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.btn-secondary {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+  font-weight: var(--font-medium);
+  padding: var(--space-3) var(--space-6);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-default);
+  transition: all var(--transition-fast);
+  cursor: pointer;
+}
+
+.btn-secondary:hover {
+  background: var(--bg-active);
+  border-color: var(--border-strong);
+}
+
+/* Terminal */
+.terminal {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xl);
+  font-family: var(--font-mono);
+  font-size: var(--font-sm);
+  color: var(--text-secondary);
+}
+
+.terminal-header {
+  padding: var(--space-4);
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.terminal-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: var(--radius-full);
+}
+
+.terminal-dot.red { background: #FF5F5F; }
+.terminal-dot.yellow { background: #FBBF24; }
+.terminal-dot.green { background: #34D399; }
+
+/* Status Badges */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-full);
+  font-size: var(--font-sm);
+  font-weight: var(--font-medium);
+}
+
+.badge-success {
+  background: var(--color-success-bg);
+  color: var(--status-green);
+}
+
+.badge-warning {
+  background: var(--color-warning-bg);
+  color: var(--status-orange);
+}
+
+.badge-error {
+  background: var(--color-error-bg);
+  color: var(--status-red);
+}
+
+.badge-info {
+  background: var(--color-info-bg);
+  color: var(--status-blue);
+}
+
+/* ==================== UTILITY CLASSES ==================== */
+
+/* Text Colors */
+.text-primary { color: var(--text-primary); }
+.text-secondary { color: var(--text-secondary); }
+.text-tertiary { color: var(--text-tertiary); }
+.text-muted { color: var(--text-muted); }
+.text-brand { color: var(--brand-primary); }
+
+/* Background Colors */
+.bg-primary { background-color: var(--bg-primary); }
+.bg-secondary { background-color: var(--bg-secondary); }
+.bg-elevated { background-color: var(--bg-elevated); }
+.bg-brand { background-color: var(--brand-primary); }
+
+/* Spacing Utilities */
+.p-0 { padding: var(--space-0); }
+.p-1 { padding: var(--space-1); }
+.p-2 { padding: var(--space-2); }
+.p-3 { padding: var(--space-3); }
+.p-4 { padding: var(--space-4); }
+.p-6 { padding: var(--space-6); }
+.p-8 { padding: var(--space-8); }
+
+.m-0 { margin: var(--space-0); }
+.m-1 { margin: var(--space-1); }
+.m-2 { margin: var(--space-2); }
+.m-3 { margin: var(--space-3); }
+.m-4 { margin: var(--space-4); }
+.m-6 { margin: var(--space-6); }
+.m-8 { margin: var(--space-8); }
+
+/* Border Radius Utilities */
+.rounded-sm { border-radius: var(--radius-sm); }
+.rounded { border-radius: var(--radius-base); }
+.rounded-md { border-radius: var(--radius-md); }
+.rounded-lg { border-radius: var(--radius-lg); }
+.rounded-xl { border-radius: var(--radius-xl); }
+.rounded-2xl { border-radius: var(--radius-2xl); }
+.rounded-full { border-radius: var(--radius-full); }
