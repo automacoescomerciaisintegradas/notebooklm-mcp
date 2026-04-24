@@ -33,6 +33,7 @@ from skills_extractor.video_processor import VideoProcessor
 from skills_extractor.ai_extractor import AIExtractor
 from skills_extractor.skill_generator import SkillGenerator
 from skills_extractor.installer import SkillInstaller
+from skills_extractor.dom_extractor import DOMExtractor
 
 app = Flask(
     __name__,
@@ -41,12 +42,29 @@ app = Flask(
 )
 app.config["SECRET_KEY"] = os.urandom(32).hex()
 
+
+@app.after_request
+def add_cors_headers(response):
+    """Permite requisições da extensão Chrome (sem origem http://)."""
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type"
+    response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
+    return response
+
+
+@app.route("/api/skills/ingest", methods=["OPTIONS"])
+@app.route("/api/skills/extension/ping", methods=["OPTIONS"])
+def extension_preflight():
+    return '', 204
+
+
 manager = ServerManager(PROJECT_ROOT)
 video_proc = VideoProcessor()
 ai_extractor = AIExtractor()
 skill_gen = SkillGenerator()
 skill_installer = SkillInstaller(PROJECT_ROOT)
 guard = SecurityGuard()
+dom_extractor = DOMExtractor(PROJECT_ROOT / "skills")
 
 PORT = 5117
 
@@ -356,6 +374,78 @@ def api_configure_ai():
 def api_config_snippet():
     """Retorna snippet de config MCP para copia manual."""
     return jsonify(skill_installer.generate_config_snippet())
+
+
+# === Extension Bridge (Chrome Extension → Flask) ===
+
+@app.route("/api/skills/extension/ping", methods=["GET"])
+def api_extension_ping():
+    """Endpoint de health check para a extensão Chrome verificar se o Flask está online."""
+    return jsonify({"status": "online", "version": "2.0.0", "service": "NotebookLM MCP"})
+
+
+@app.route("/api/skills/ingest", methods=["POST"])
+def api_ingest_from_extension():
+    """
+    Recebe metadados extraídos pela extensão Chrome do YouTube (sem LLM).
+    Gera skill estruturada e opcionalmente adiciona URL ao NotebookLM.
+    """
+    data = request.get_json()
+    if not data or not data.get("video_id"):
+        return jsonify({"error": "video_id obrigatório"}), 400
+
+    notebook_id = data.get("notebook_id") or app.config.get("DEFAULT_NOTEBOOK_ID", "")
+
+    # Adicionar ao NotebookLM via CLI (se tiver notebook configurado)
+    notebooklm_added = False
+    notebooklm_error = None
+    if notebook_id:
+        import subprocess
+        url = data.get("url", "")
+        try:
+            result = subprocess.run(
+                ["nlm", "source", "add", notebook_id, "--url", url, "--wait"],
+                capture_output=True, text=True, timeout=60,
+            )
+            notebooklm_added = result.returncode == 0
+            if not notebooklm_added:
+                notebooklm_error = result.stderr.strip() or result.stdout.strip()
+        except Exception as e:
+            notebooklm_error = str(e)
+
+    data["notebooklm_added"] = notebooklm_added
+
+    # Gerar skill sem LLM
+    try:
+        skill = dom_extractor.ingest(data)
+    except Exception as e:
+        return jsonify({"error": f"Erro ao gerar skill: {str(e)}"}), 500
+
+    return jsonify({
+        "success": True,
+        "skill": skill,
+        "notebooklm_added": notebooklm_added,
+        "notebooklm_error": notebooklm_error,
+        "already_existed": skill.get("already_existed", False),
+        "message": (
+            f"Skill '{skill['name']}' já existia." if skill.get("already_existed")
+            else f"Skill '{skill['name']}' criada com sucesso!"
+        ),
+    })
+
+
+@app.route("/api/skills/dom", methods=["GET"])
+def api_list_dom_skills():
+    """Lista skills geradas pela extensão (sem LLM)."""
+    skills = dom_extractor.list_skills()
+    return jsonify({"skills": skills, "count": len(skills)})
+
+
+@app.route("/api/skills/dom/<slug>", methods=["DELETE"])
+def api_delete_dom_skill(slug):
+    if dom_extractor.delete_skill(slug):
+        return jsonify({"success": True})
+    return jsonify({"error": "Skill não encontrada"}), 404
 
 
 # === Health ===
